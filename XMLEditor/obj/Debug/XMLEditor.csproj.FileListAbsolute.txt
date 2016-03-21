@@ -1,1 +1,10 @@
 C:\Users\User\Desktop\XMLEditor\XMLEditor\bin\Debug\XMLEditor.exe.config
+C:\Users\User\Desktop\XMLEditor\XMLEditor\bin\Debug\XMLEditor.exe
+C:\Users\User\Desktop\XMLEditor\XMLEditor\bin\Debug\XMLEditor.pdb
+C:\Users\User\Desktop\XMLEditor\XMLEditor\bin\Debug\System.Data.SQLite.DLL
+C:\Users\User\Desktop\XMLEditor\XMLEditor\obj\Debug\XMLEditor.csprojResolveAssemblyReference.cache
+C:\Users\User\Desktop\XMLEditor\XMLEditor\obj\Debug\XMLEditor.Form1.resources
+C:\Users\User\Desktop\XMLEditor\XMLEditor\obj\Debug\XMLEditor.Properties.Resources.resources
+C:\Users\User\Desktop\XMLEditor\XMLEditor\obj\Debug\XMLEditor.csproj.GenerateResource.Cache
+C:\Users\User\Desktop\XMLEditor\XMLEditor\obj\Debug\XMLEditor.exe
+C:\Users\User\Desktop\XMLEditor\XMLEditor\obj\Debug\XMLEditor.pdb
