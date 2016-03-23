@@ -13,32 +13,131 @@ namespace XMLEditor
 {
     public partial class Form1 : Form
     {
-        Excel.Application xlApp;
+        int num = 0;
+        string moduleName = string.Empty;
+        string moduleID = string.Empty;
+        string funcName = string.Empty;
+        TestMenu[] tm = new TestMenu[7];
 
         public Form1()
         {
             InitializeComponent();
         }
 
+        public class InvalidTestMenu : Exception
+        {
+            public InvalidTestMenu(string message)
+            {
+                MessageBox.Show(message);
+            }
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             Excel.Application xlApp = new Excel.Application();
             Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:/Users/User/Desktop/V5S_Diag Command.xls");
-            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[2];
-            Excel.Range xlRange = xlWorksheet.UsedRange;
+            Excel._Worksheet xlWorksheet;
+            Excel.Range xlRange;
 
-            int rowCount = xlRange.Rows.Count;
-            int colCount = xlRange.Columns.Count;
-            MessageBox.Show(rowCount.ToString() + " " + colCount.ToString());
-
-            for (int i = 1; i <= rowCount; i++)
+            for (int i = 2; i <= xlWorkbook.Sheets.Count; i++)
             {
-                for (int j = 1; j <= colCount; j++)
+                try
                 {
-                    if (xlRange.Cells[i, j].Value2 != null)
-                        MessageBox.Show(xlRange.Cells[i, j].Value2.ToString());
+                    xlWorksheet = xlWorkbook.Sheets[i];
+                    xlRange = xlWorksheet.UsedRange;
+
+                    int rowCount = xlRange.Rows.Count;
+
+                    for (int row = 1; row <= rowCount; row++)
+                    {
+                        switch (xlWorksheet.Name)
+                        {
+                            case "Category ID":
+                                updateCategory(xlRange, row);
+                                break;
+                            case "Module ID":
+                                updateModule(xlRange, row);
+                                break;
+                            case "Driver":
+                                updateFuncName(xlRange, row, "Driver");
+                                break;
+                            case "Library":
+                                updateFuncName(xlRange, row, "Library");
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+                catch (InvalidTestMenu ex) { }
+                catch (Exception ex) { MessageBox.Show(ex.Message); }
+            }
+        }
+
+        private void updateCategory(Excel.Range xlRange, int row)
+        {
+            if (xlRange.Cells[row, 2].Value2 != null)
+            {
+                tm[row - 2] = new TestMenu();
+                tm[row - 2].setCategoryName(xlRange.Cells[row, 1].Value2);
+                tm[row - 2].setCategoryID((char)xlRange.Cells[row, 2].Value2[0]);
+            }
+        }
+
+        private void updateModule(Excel.Range xlRange, int row)
+        {
+            if (xlRange.Cells[row, 2].Value2 != null)
+            {
+                string categoryName = xlRange.Cells[row, 1].Value2.Substring(0, xlRange.Cells[row, 1].Value2.IndexOf('-') - 1);
+                num = getTestMenuNum(categoryName);
+                if (num == 99)
+                    throw new InvalidTestMenu("Invalid Category!");
+                moduleName += xlRange.Cells[row, 1].Value2.Substring(xlRange.Cells[row, 1].Value2.LastIndexOf('-') + 2) + "|";
+                moduleID += xlRange.Cells[row, 2].Value2 + "|";
+
+                if (xlRange.Cells[row + 1, 1].Value2 == null)
+                {
+                    moduleName = moduleName.Remove(moduleName.Length - 1);
+                    moduleID = moduleID.Remove(moduleID.Length - 1);
+                    tm[num].setModuleName(moduleName);
+                    tm[num].setModuleID(moduleID);
+                    moduleName = string.Empty;
+                    moduleID = string.Empty;
                 }
             }
+        }
+
+        private void updateFuncName(Excel.Range xlRange, int row, string module)
+        {
+            if (!string.Equals(xlRange.Cells[row, 2].Value2, "Function Name") &&
+                                    !string.IsNullOrEmpty(xlRange.Cells[row, 2].Value2))
+            {
+                funcName += xlRange.Cells[row, 2].Value2 + ",";
+
+                if (xlRange.Cells[row + 1, 1].Value2 == null)
+                {
+                    funcName = funcName.Remove(funcName.Length - 1);
+                    funcName += "|";
+
+                    if (xlRange.Cells[row + 2, 1].Value2 == null)
+                    {
+                        funcName = funcName.Remove(funcName.Length - 1);
+                        tm[getTestMenuNum(module)].setFuncName(funcName);
+                        funcName = string.Empty;
+                    }
+                }
+            }
+        }
+
+        private int getTestMenuNum(string categoryName)
+        {
+            for(int i = 0; i < tm.Count(); i++)
+            {
+                if (string.Equals(tm[i].getCategoryName(), categoryName))
+                    return i;
+            }
+
+            return 99;
         }
     }
 }
