@@ -20,6 +20,8 @@ namespace XMLEditor
         string moduleID = string.Empty;
         string funcName = string.Empty;
         TestMenu[] tm = new TestMenu[7];
+        Category cat = new Category();
+
         Excel.Application xlApp = new Excel.Application();
         Excel.Workbook xlWorkbook;
         Excel._Worksheet xlWorksheet;
@@ -27,7 +29,6 @@ namespace XMLEditor
 
         string appPath, folderPath;
         ContextMenuStrip docMenu;
-        string filename = "TestData";
 
         public class InvalidTestMenu : Exception
         {
@@ -49,23 +50,15 @@ namespace XMLEditor
         {
             InitializeComponent();
             createDataPath();
+            createTreeView();
+        }
+
+        private void createTreeView()
+        {
             treeView1.BeginUpdate();
-            treeView1.Nodes.Add(createNormalTreeNode("asdasdsadasd"));
+            treeView1.Nodes.Add(createNormalTreeNode("TestMenu"));
             treeView1.AllowDrop = true;
-            // Add some additional nodes.
-            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("1"));
-            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("2"));
-            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("3"));
-            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("4"));
-            treeView1.Nodes.Add(createNormalTreeNode("resume.doc"));
-            string[] str = new string[4];
-            str[0] = "bello";
-            str[1] = "lello";
-            str[2] = "gello";
-            str[3] = "rello";
-            createDropDownTreeNode("", str);
             treeView1.EndUpdate();
-            treeView1.ExpandAll();
         }
 
         public TreeNode createNormalTreeNode(string nodeName)
@@ -85,20 +78,77 @@ namespace XMLEditor
 
         private void addNode(TreeNode node)
         {
-            string[] str = new string[4];
-            str[0] = "bello";
-            str[1] = "lello";
-            str[2] = "gello";
-            str[3] = "rello";
-            DropDownTreeNode dNode = createDropDownTreeNode("hello", str);
-            node.Nodes.Add(dNode);
-            node.Expand();
-            treeView1.ExpandNodeComboBox(dNode);
+            try
+            {
+                if (xlWorkbook == null)
+                    throw new NoExcelSelected("No Excel selected!");
+           
+                string nodeName = string.Empty;
+                string[] strArr = getStringArray(node);
+            
+                if(node.Level == 0)
+                    nodeName = "Category";
+                else if(node.Level == 1)
+                    nodeName = "Module";
+                else if(node.Level == 2)
+                    nodeName = "TC";
+                else if(node.Level == 3)
+                    nodeName = "SQN";
+
+                if (node.Level >= 2)
+                {
+                    TreeNode dNode = null;
+                    if(node.Level == 2)
+                        dNode = createNormalTreeNode("TC_" + (node.Nodes.Count + 1).ToString("D4"));
+                    else
+                        dNode = createNormalTreeNode("SN_" + (node.Nodes.Count + 1).ToString("D4"));
+
+                    node.Nodes.Add(dNode);
+                    node.Expand();
+                }
+                else
+                {
+                    if (strArr != null)
+                    {
+                        DropDownTreeNode dNode = createDropDownTreeNode(nodeName, strArr);
+                        node.Nodes.Add(dNode);
+                        node.Expand();
+                        treeView1.ExpandNodeComboBox(dNode);
+                    }
+                    else
+                        MessageBox.Show("No module available!");
+                }
+            }
+            catch (NoExcelSelected ex) { }
         }
 
         private void deleteNode(TreeNode node)
         {
+            TreeNode parent = node.Parent;
+            int index = node.Index;
             node.Remove();
+
+            for (int i = index; i < parent.Nodes.Count; i++)
+            {
+                if (parent.Level == 2)
+                {
+                    parent.Nodes[i].Name = "TC_" + (i + 1).ToString("D4");
+                    parent.Nodes[i].Text = "TC_" + (i + 1).ToString("D4");
+                }
+                else
+                {
+                    parent.Nodes[i].Name = "SN_" + (i + 1).ToString("D4");
+                    parent.Nodes[i].Text = "SN_" + (i + 1).ToString("D4");
+                }
+            }
+        }
+
+        private void removeAllChildNode(TreeNode node)
+        {
+            for (int i = node.Nodes.Count - 1; i >= 0; i--)
+            {
+                node.Nodes[i].Remove();
+            }
         }
 
         void contextMenu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -108,7 +158,18 @@ namespace XMLEditor
             if (item.ToString() == "Edit")
             {
                 treeView1.BeginUpdate();
+
+                if(treeView1.SelectedNode.Nodes.Count > 0)
+                {
+                    if (MessageBox.Show("Are you sure?\nAll child nodes will be remove", "Confirmation",
+                                         MessageBoxButtons.YesNo,
+                                         MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        removeAllChildNode(treeView1.SelectedNode);
+                    }
+                }
                 treeView1.ExpandNodeComboBox(treeView1.SelectedNode);
+
                 treeView1.EndUpdate();
             }
             else if (item.ToString() == "Add")
@@ -120,7 +181,6 @@ namespace XMLEditor
                 deleteNode(treeView1.SelectedNode);
             }
         }
-
 
         // handle the show context menu event at tree node
         private void treeView1_MouseUp(object sender, MouseEventArgs e)
@@ -144,10 +204,10 @@ namespace XMLEditor
             appPath = Path.GetDirectoryName(Application.ExecutablePath);  // get the root path of the dir
             folderPath = Path.Combine(appPath, "AppData");                // get the path to the AppData folder
 
-            if (!System.IO.Directory.Exists(folderPath))
+            if (!Directory.Exists(folderPath))
             {
                 MessageBox.Show("AppData folder not found. It will be created automatically");
-                System.IO.Directory.CreateDirectory(folderPath);
+                Directory.CreateDirectory(folderPath);
             }
         }
 
@@ -165,24 +225,26 @@ namespace XMLEditor
             addLabel.Text = "Add";
 
             //Add the menu items to the menu.
-            if (nodeLevel < 4)
-            {
-                if (nodeLevel == 3)
-                    docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel });
-                else
-                    docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel, renameLabel });
-                docMenu.ItemClicked += new ToolStripItemClickedEventHandler(contextMenu_ItemClicked);
-            }
+            if (nodeLevel == 4) //Sequence Number
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { deleteLabel });
+            else if (nodeLevel == 0 && treeView1.Nodes["TestMenu"].Nodes.Count > 0)
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { });
+            else if (nodeLevel == 1 && treeView1.Nodes["TestMenu"].Nodes[0].Nodes.Count > 0)
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { deleteLabel, renameLabel });
+            else if (nodeLevel == 0)    //Test Menu
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel });
+            else if (nodeLevel == 3)    //Test Case
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel });
+            else
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel, renameLabel });
 
+            docMenu.ItemClicked += new ToolStripItemClickedEventHandler(contextMenu_ItemClicked);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void extractDataFromExcel()
         {
             try
             {
-                if (xlWorkbook == null)
-                    throw new NoExcelSelected("No Excel selected!");
-
                 for (int i = 2; i <= xlWorkbook.Sheets.Count; i++)
                 {
                     xlWorksheet = xlWorkbook.Sheets[i];
@@ -213,7 +275,6 @@ namespace XMLEditor
                 }
             }
             catch (InvalidTestMenu ex) { }
-            catch (NoExcelSelected ex) { }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
 
             //MessageBox.Show(tm[1].getModuleName());
@@ -286,6 +347,32 @@ namespace XMLEditor
             return 99;
         }
 
+        private string[] getStringArray(TreeNode node)
+        {
+            string[] strArr = null;
+
+            switch(node.Level)
+            {
+                case 0: //Categories
+                    strArr = new string[tm.Count()];
+
+                    for (int i = 0; i < tm.Count(); i++ )
+                    {
+                        strArr[i] = tm[i].getCategoryName();
+                    }
+                    break;
+                case 1: //Module
+                    int num = getTestMenuNum(node.Text);
+                    if (!string.IsNullOrEmpty(tm[num].getModuleName()))
+                        strArr = tm[num].getModuleName().Split('|');
+                    break;
+                default:
+                    break;
+            }
+
+            return strArr;
+        }
+
         private void editCategoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //Create a new instance of the OpenFileDialog
@@ -295,13 +382,16 @@ namespace XMLEditor
             dialog.Filter = "Excel files (*.xls)|*.xls";
 
             //Set Initial Directory
-            dialog.InitialDirectory = Directory.GetCurrentDirectory() + "\\AppData";
+            dialog.InitialDirectory = folderPath;
             dialog.Title = "Select a Excel file";
 
             //Present to the user. 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 xlWorkbook = xlApp.Workbooks.Open(dialog.FileName);
+                this.Cursor = Cursors.WaitCursor;
+                extractDataFromExcel();
+                this.Cursor = Cursors.Default;
             }
         }
 
