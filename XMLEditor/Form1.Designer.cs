@@ -74,7 +74,7 @@
             // editCategoryToolStripMenuItem
             // 
             this.editCategoryToolStripMenuItem.Name = "editCategoryToolStripMenuItem";
-            this.editCategoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.editCategoryToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.editCategoryToolStripMenuItem.Text = "Open CSV file";
             this.editCategoryToolStripMenuItem.Click += new System.EventHandler(this.editCategoryToolStripMenuItem_Click);
             // 
@@ -102,6 +102,9 @@
             this.treeView1.Name = "treeView1";
             this.treeView1.Size = new System.Drawing.Size(231, 316);
             this.treeView1.TabIndex = 3;
+            this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
+            this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
+            this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
             this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
             // 
             // lblSqDesc
