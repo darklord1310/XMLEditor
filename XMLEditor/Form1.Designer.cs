@@ -72,8 +72,9 @@
             // editCategoryToolStripMenuItem
             // 
             this.editCategoryToolStripMenuItem.Name = "editCategoryToolStripMenuItem";
-            this.editCategoryToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.editCategoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.editCategoryToolStripMenuItem.Text = "Open CSV file";
+            this.editCategoryToolStripMenuItem.Click += new System.EventHandler(this.editCategoryToolStripMenuItem_Click);
             // 
             // treeView1
             // 

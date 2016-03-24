@@ -21,13 +21,33 @@ namespace XMLEditor
         string funcName = string.Empty;
         TestMenu[] tm = new TestMenu[7];
 
+        Excel.Application xlApp = new Excel.Application();
+        Excel.Workbook xlWorkbook;
+        Excel._Worksheet xlWorksheet;
+        Excel.Range xlRange;
+
         string appPath, folderPath;
         ContextMenuStrip docMenu;
         string filename = "TestData";
 
+        public class InvalidTestMenu : Exception
+        {
+            public InvalidTestMenu(string message)
+            {
+                MessageBox.Show(message);
+            }
+        }
+
+        public class NoExcelSelected : Exception
+        {
+            public NoExcelSelected(string message)
+            {
+                MessageBox.Show(message);
+            }
+        }
+
         public Form1()
         {
-            
             InitializeComponent();
             createDataPath();
             treeView1.BeginUpdate();
@@ -70,120 +90,39 @@ namespace XMLEditor
              
         }
 
-        public class InvalidTestMenu : Exception
+        private void deleteNode(TreeNode node)
         {
-            public InvalidTestMenu(string message)
+            node.Remove();
+        }
+
+        void contextMenu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            ToolStripItem item = e.ClickedItem;
+            
+            if(item.ToString() == "Edit" )
             {
-                MessageBox.Show(message);
+                //DropDownTreeView bla = new DropDownTreeView();
+                treeView1.ExpandNodeComboBox(treeView1.SelectedNode);
+            }
+            else if (item.ToString() == "Delete")
+            {
+                deleteNode(treeView1.SelectedNode);
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        // handle the show context menu event at tree node
+        private void treeView1_MouseUp(object sender, MouseEventArgs e)
         {
-            Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:/Users/User/Desktop/V5S_Diag Command.xls");
-            Excel._Worksheet xlWorksheet;
-            Excel.Range xlRange;
-
-            for (int i = 2; i <= xlWorkbook.Sheets.Count; i++)
+            if (e.Button == MouseButtons.Right)
             {
-                try
-                {
-                    xlWorksheet = xlWorkbook.Sheets[i];
-                    xlRange = xlWorksheet.UsedRange;
-
-                    int rowCount = xlRange.Rows.Count;
-
-                    for (int row = 1; row <= rowCount; row++)
-                    {
-                        switch (xlWorksheet.Name)
-                        {
-                            case "Category ID":
-                                updateCategory(xlRange, row);
-                                break;
-                            case "Module ID":
-                                updateModule(xlRange, row);
-                                break;
-                            case "Driver":
-                                updateFuncName(xlRange, row, "Driver");
-                                break;
-                            case "Library":
-                                updateFuncName(xlRange, row, "Library");
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
-                catch (InvalidTestMenu ex) { }
-                catch (Exception ex) { MessageBox.Show(ex.Message); }
+                if(treeView1.GetNodeAt(e.X,e.Y) != null)
+                    treeView1.SelectedNode = treeView1.GetNodeAt(e.X, e.Y);         // get the tree node on mouse right click
+                treeView1.SelectedNode.BackColor = SystemColors.HighlightText;      // highlight the selected node
+                Point p = new Point(treeView1.SelectedNode.Bounds.Right + 15, treeView1.SelectedNode.Bounds.Bottom + 25);
+                createContextMenuStrip(treeView1.SelectedNode.Level);
+                docMenu.Show(PointToScreen(p));     
             }
-        }
-
-        private void updateCategory(Excel.Range xlRange, int row)
-        {
-            if (xlRange.Cells[row, 2].Value2 != null)
-            {
-                tm[row - 2] = new TestMenu();
-                tm[row - 2].setCategoryName(xlRange.Cells[row, 1].Value2);
-                tm[row - 2].setCategoryID((char)xlRange.Cells[row, 2].Value2[0]);
-            }
-        }
-
-        private void updateModule(Excel.Range xlRange, int row)
-        {
-            if (xlRange.Cells[row, 2].Value2 != null)
-            {
-                string categoryName = xlRange.Cells[row, 1].Value2.Substring(0, xlRange.Cells[row, 1].Value2.IndexOf('-') - 1);
-                num = getTestMenuNum(categoryName);
-                if (num == 99)
-                    throw new InvalidTestMenu("Invalid Category!");
-                moduleName += xlRange.Cells[row, 1].Value2.Substring(xlRange.Cells[row, 1].Value2.LastIndexOf('-') + 2) + "|";
-                moduleID += xlRange.Cells[row, 2].Value2 + "|";
-
-                if (xlRange.Cells[row + 1, 1].Value2 == null)
-                {
-                    moduleName = moduleName.Remove(moduleName.Length - 1);
-                    moduleID = moduleID.Remove(moduleID.Length - 1);
-                    tm[num].setModuleName(moduleName);
-                    tm[num].setModuleID(moduleID);
-                    moduleName = string.Empty;
-                    moduleID = string.Empty;
-                }
-            }
-        }
-
-        private void updateFuncName(Excel.Range xlRange, int row, string module)
-        {
-            if (!string.Equals(xlRange.Cells[row, 2].Value2, "Function Name") &&
-                                    !string.IsNullOrEmpty(xlRange.Cells[row, 2].Value2))
-            {
-                funcName += xlRange.Cells[row, 2].Value2 + ",";
-
-                if (xlRange.Cells[row + 1, 1].Value2 == null)
-                {
-                    funcName = funcName.Remove(funcName.Length - 1);
-                    funcName += "|";
-
-                    if (xlRange.Cells[row + 2, 1].Value2 == null)
-                    {
-                        funcName = funcName.Remove(funcName.Length - 1);
-                        tm[getTestMenuNum(module)].setFuncName(funcName);
-                        funcName = string.Empty;
-                    }
-                }
-            }
-        }
-
-        private int getTestMenuNum(string categoryName)
-        {
-            for(int i = 0; i < tm.Count(); i++)
-            {
-                if (string.Equals(tm[i].getCategoryName(), categoryName))
-                    return i;
-            }
-
-            return 99;
+           
         }
 
         public void createDataPath()
@@ -212,39 +151,141 @@ namespace XMLEditor
             addLabel.Text = "Add";
 
             //Add the menu items to the menu.
-            if(nodeLevel == 4)
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel});
+            if (nodeLevel == 4)
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel });
             else
-                docMenu.Items.AddRange(new ToolStripMenuItem[]{addLabel,deleteLabel, renameLabel});
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel, renameLabel });
 
             docMenu.ItemClicked += new ToolStripItemClickedEventHandler(contextMenu_ItemClicked);
         }
 
-        void contextMenu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
-            ToolStripItem item = e.ClickedItem;
-            
-            if(item.ToString() == "Edit" )
+            try
             {
-                //DropDownTreeView bla = new DropDownTreeView();
-                treeView1.ExpandNodeComboBox(treeView1.SelectedNode);
+                if (xlWorkbook == null)
+                    throw new NoExcelSelected("No Excel selected!");
+
+                for (int i = 2; i <= xlWorkbook.Sheets.Count; i++)
+                {
+                    xlWorksheet = xlWorkbook.Sheets[i];
+                    xlRange = xlWorksheet.UsedRange;
+
+                    int rowCount = xlRange.Rows.Count;
+
+                    for (int row = 1; row <= rowCount; row++)
+                    {
+                        switch (xlWorksheet.Name)
+                        {
+                            case "Category ID":
+                                updateCategory(row);
+                                break;
+                            case "Module ID":
+                                updateModule(row);
+                                break;
+                            case "Driver":
+                                updateFuncName(row, "Driver");
+                                break;
+                            case "Library":
+                                updateFuncName(row, "Library");
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
             }
-            
+            catch (InvalidTestMenu ex) { }
+            catch (NoExcelSelected ex) { }
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
+
+            //MessageBox.Show(tm[1].getModuleName());
+            //MessageBox.Show(tm[1].getFuncName());
         }
 
-        // handle the show context menu event at tree node
-        private void treeView1_MouseUp(object sender, MouseEventArgs e)
+        private void updateCategory(int row)
         {
-            if (e.Button == MouseButtons.Right)
+            if (xlRange.Cells[row, 2].Value2 != null)
             {
-                if(treeView1.GetNodeAt(e.X,e.Y) != null)
-                    treeView1.SelectedNode = treeView1.GetNodeAt(e.X, e.Y);         // get the tree node on mouse right click
-                treeView1.SelectedNode.BackColor = SystemColors.HighlightText;      // highlight the selected node
-                Point p = new Point(treeView1.SelectedNode.Bounds.Right + 15, treeView1.SelectedNode.Bounds.Bottom + 25);
-                createContextMenuStrip(treeView1.SelectedNode.Level);
-                docMenu.Show(PointToScreen(p));     
+                tm[row - 2] = new TestMenu();
+                tm[row - 2].setCategoryName(xlRange.Cells[row, 1].Value2);
+                tm[row - 2].setCategoryID((char)xlRange.Cells[row, 2].Value2[0]);
             }
-           
+        }
+
+        private void updateModule(int row)
+        {
+            if (xlRange.Cells[row, 2].Value2 != null)
+            {
+                string categoryName = xlRange.Cells[row, 1].Value2.Substring(0, xlRange.Cells[row, 1].Value2.IndexOf('-') - 1);
+                num = getTestMenuNum(categoryName);
+                if (num == 99)
+                    throw new InvalidTestMenu("Invalid Category!");
+                moduleName += xlRange.Cells[row, 1].Value2.Substring(xlRange.Cells[row, 1].Value2.LastIndexOf('-') + 2) + "|";
+                moduleID += xlRange.Cells[row, 2].Value2 + "|";
+
+                if (xlRange.Cells[row + 1, 1].Value2 == null)
+                {
+                    moduleName = moduleName.Remove(moduleName.Length - 1);
+                    moduleID = moduleID.Remove(moduleID.Length - 1);
+                    tm[num].setModuleName(moduleName);
+                    tm[num].setModuleID(moduleID);
+                    moduleName = string.Empty;
+                    moduleID = string.Empty;
+                }
+            }
+        }
+
+        private void updateFuncName(int row, string module)
+        {
+            if (!string.Equals(xlRange.Cells[row, 2].Value2, "Function Name") &&
+                                    !string.IsNullOrEmpty(xlRange.Cells[row, 2].Value2))
+            {
+                funcName += xlRange.Cells[row, 2].Value2 + ",";
+
+                if (xlRange.Cells[row + 1, 1].Value2 == null)
+                {
+                    funcName = funcName.Remove(funcName.Length - 1);
+                    funcName += "|";
+
+                    if (xlRange.Cells[row + 2, 1].Value2 == null)
+                    {
+                        funcName = funcName.Remove(funcName.Length - 1);
+                        tm[getTestMenuNum(module)].setFuncName(funcName);
+                        funcName = string.Empty;
+                    }
+                }
+            }
+        }
+
+        private int getTestMenuNum(string categoryName)
+        {
+            for (int i = 0; i < tm.Count(); i++)
+            {
+                if (string.Equals(tm[i].getCategoryName(), categoryName))
+                    return i;
+            }
+
+            return 99;
+        }
+
+        private void editCategoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //Create a new instance of the OpenFileDialog
+            OpenFileDialog dialog = new OpenFileDialog();
+
+            //Set the file filter
+            dialog.Filter = "Excel files (*.xls)|*.xls";
+
+            //Set Initial Directory
+            dialog.InitialDirectory = Directory.GetCurrentDirectory() + "\\AppData";
+            dialog.Title = "Select a Excel file";
+
+            //Present to the user. 
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                xlWorkbook = xlApp.Workbooks.Open(dialog.FileName);
+            }
         }
     }
 }
