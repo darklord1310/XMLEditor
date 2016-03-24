@@ -90,6 +90,11 @@ namespace XMLEditor
              
         }
 
+        private void addNode(TreeNode node)
+        {
+            node.Nodes.Add(new DropDownTreeNode("Hello"));
+        }
+
         private void deleteNode(TreeNode node)
         {
             node.Remove();
@@ -104,6 +109,10 @@ namespace XMLEditor
                 //DropDownTreeView bla = new DropDownTreeView();
                 treeView1.ExpandNodeComboBox(treeView1.SelectedNode);
             }
+            else if (item.ToString() == "Add")
+            {
+                addNode(treeView1.SelectedNode);
+            }
             else if (item.ToString() == "Delete")
             {
                 deleteNode(treeView1.SelectedNode);
@@ -115,12 +124,14 @@ namespace XMLEditor
         {
             if (e.Button == MouseButtons.Right)
             {
-                if(treeView1.GetNodeAt(e.X,e.Y) != null)
+                if (treeView1.GetNodeAt(e.X, e.Y) != null)
+                {
                     treeView1.SelectedNode = treeView1.GetNodeAt(e.X, e.Y);         // get the tree node on mouse right click
-                treeView1.SelectedNode.BackColor = SystemColors.HighlightText;      // highlight the selected node
-                Point p = new Point(treeView1.SelectedNode.Bounds.Right + 15, treeView1.SelectedNode.Bounds.Bottom + 25);
-                createContextMenuStrip(treeView1.SelectedNode.Level);
-                docMenu.Show(PointToScreen(p));     
+                    treeView1.SelectedNode.BackColor = SystemColors.HighlightText;      // highlight the selected node
+                    Point p = new Point(treeView1.SelectedNode.Bounds.Right + 15, treeView1.SelectedNode.Bounds.Bottom + 25);
+                    createContextMenuStrip(treeView1.SelectedNode.Level);
+                    docMenu.Show(PointToScreen(p));
+                }
             }
            
         }
