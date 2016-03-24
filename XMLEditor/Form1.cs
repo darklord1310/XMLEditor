@@ -20,7 +20,6 @@ namespace XMLEditor
         string moduleID = string.Empty;
         string funcName = string.Empty;
         TestMenu[] tm = new TestMenu[7];
-
         Excel.Application xlApp = new Excel.Application();
         Excel.Workbook xlWorkbook;
         Excel._Worksheet xlWorksheet;
@@ -54,14 +53,17 @@ namespace XMLEditor
             treeView1.Nodes.Add(createNormalTreeNode("asdasdsadasd"));
             treeView1.AllowDrop = true;
             // Add some additional nodes.
-            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("aaaaaa"));
+            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("1"));
+            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("2"));
+            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("3"));
+            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("4"));
             treeView1.Nodes.Add(createNormalTreeNode("resume.doc"));
             string[] str = new string[4];
             str[0] = "bello";
             str[1] = "lello";
             str[2] = "gello";
             str[3] = "rello";
-            createDropDownTreeNode("",str);
+            createDropDownTreeNode("", str);
             treeView1.EndUpdate();
             treeView1.ExpandAll();
         }
@@ -79,24 +81,6 @@ namespace XMLEditor
             newnode.Name = nodeName;
             newnode.addValuesToComboBox(comboBoxValues);
             return newnode;
-            
-            //DropDownTreeNode weightNode = new DropDownTreeNode("1/4 lb.");
-            //weightNode.ComboBox.Items.Add("1/4 lb.");
-            //weightNode.ComboBox.Items.Add("1/2 lb.");
-            //weightNode.ComboBox.Items.Add("3/4 lb.");
-            //weightNode.ComboBox.SelectedIndex = 0;
-
-            //DropDownTreeNode pattyNode = new DropDownTreeNode("All beef patty");
-            //pattyNode.ComboBox.Items.Add("All beef patty");
-            //pattyNode.ComboBox.Items.Add("All chicken patty");
-            //pattyNode.ComboBox.SelectedIndex = 0;
-
-            //TreeNode meatNode = new TreeNode("Meat Selection");
-            //meatNode.Nodes.Add(weightNode);
-            //meatNode.Nodes.Add(pattyNode);
-
-            //this.treeView1.Nodes.Add(meatNode);
-            //return null;
         }
 
         private void addNode(TreeNode node)
@@ -120,10 +104,9 @@ namespace XMLEditor
         void contextMenu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             ToolStripItem item = e.ClickedItem;
-            
-            if(item.ToString() == "Edit" )
+
+            if (item.ToString() == "Edit")
             {
-                //DropDownTreeView bla = new DropDownTreeView();
                 treeView1.BeginUpdate();
                 treeView1.ExpandNodeComboBox(treeView1.SelectedNode);
                 treeView1.EndUpdate();
@@ -131,57 +114,13 @@ namespace XMLEditor
             else if (item.ToString() == "Add")
             {
                 addNode(treeView1.SelectedNode);
-                DropDownTreeNode newnode = new DropDownTreeNode("");
-                // load the data into combobox
-                // select the default value for the combobox
-                //addAtSelectedTreeNode(treeView1.TopNode, treeView1.SelectedNode.Name, treeView1.SelectedNode.Level, newnode);
-                //treeView1.SelectedNode.Nodes.Add(newnode);
-                //treeView1.Nodes[treeView1.SelectedNode.Index].Nodes.Add(newnode);
-                //treeView1.EndUpdate();
-                
             }
             else if (item.ToString() == "Delete")
             {
                 deleteNode(treeView1.SelectedNode);
             }
         }
-        
-        /*
-         *  root        is the first node also known as the root of the node
-         *  name        is the name of the selected tree node which will add an
-         *              additional child node to it
-         *  nodeLevel   is the node level of the selected tree node
-         *  newnode     is the new child node going to add to the selected node
-         * 
-         */
-        private void addAtSelectedTreeNode(TreeNode root, String name, int nodeLevel, TreeNode newnode)
-        {
-            if (root.Name.Equals(name) && root.Level == nodeLevel)
-            {
-                root.Nodes.Add(newnode);
-                treeView1.ExpandAll();
-                treeView1.ExpandNodeComboBox(newnode);
-                Console.WriteLine("added");
-            }
-            else
-            {
-                foreach (TreeNode node in root.Nodes)
-                {
-                    if (node.Name.Equals(name) && node.Level == nodeLevel)
-                    {
-                        node.Nodes.Add(newnode);
-                        treeView1.ExpandAll();
-                        treeView1.ExpandNodeComboBox(newnode);
-                        Console.WriteLine("added");
-                    }
-                    else
-                    {
-                        if (node.Nodes.Count > 0)
-                            addAtSelectedTreeNode(node, name, nodeLevel, newnode);
-                    }
-                }
-            }
-        }
+
 
         // handle the show context menu event at tree node
         private void treeView1_MouseUp(object sender, MouseEventArgs e)
@@ -197,7 +136,7 @@ namespace XMLEditor
                     docMenu.Show(PointToScreen(p));
                 }
             }
-           
+
         }
 
         public void createDataPath()
@@ -226,12 +165,15 @@ namespace XMLEditor
             addLabel.Text = "Add";
 
             //Add the menu items to the menu.
-            if (nodeLevel == 4)
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel });
-            else
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel, renameLabel });
+            if (nodeLevel < 4)
+            {
+                if (nodeLevel == 3)
+                    docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel });
+                else
+                    docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel, renameLabel });
+                docMenu.ItemClicked += new ToolStripItemClickedEventHandler(contextMenu_ItemClicked);
+            }
 
-            docMenu.ItemClicked += new ToolStripItemClickedEventHandler(contextMenu_ItemClicked);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -362,5 +304,165 @@ namespace XMLEditor
                 xlWorkbook = xlApp.Workbooks.Open(dialog.FileName);
             }
         }
+
+        private void treeView1_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        private void treeView1_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            treeView1.DoDragDrop(e.Item, DragDropEffects.Move);
+        }
+
+        private void treeView1_DragDrop(object sender, DragEventArgs e)
+        {
+            TreeNode NewNode;
+
+            if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
+            {
+                Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
+                TreeNode DestinationNode = ((TreeView)sender).GetNodeAt(pt);
+                NewNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
+                handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
+            }
+        }
+
+        private void handleNodeMoving(TreeNode parent, int fromIndex, int toIndex)
+        {
+            int status = toIndex - fromIndex;
+            List<TreeNode> nodes;
+
+            nodes = getNodeValues(parent);
+            
+            if(status > 0)
+                nodes = swapDown(nodes, fromIndex, toIndex);
+            else
+                nodes = swapUp(nodes, fromIndex, toIndex);
+
+            rearrangeTreeNodes(parent, nodes);
+        }
+
+        private void rearrangeTreeNodes(TreeNode parent, List<TreeNode> nodes)
+        {
+            int i = 0;
+            RemoveChildNodes(parent);
+            foreach (TreeNode element in nodes)
+            {
+                parent.Nodes.Add(nodes[i]);
+                i++;
+            }
+        }
+
+        private List<TreeNode> getNodeValues(TreeNode parentNode)
+        {
+            List<TreeNode> nodes = new List<TreeNode>();
+            foreach (TreeNode node in parentNode.Nodes)
+            {
+                nodes.Add(node);
+            }
+            return nodes;
+        }
+
+        private void RemoveChildNodes(TreeNode aNode)
+        {
+            if (aNode.Nodes.Count > 0)
+            {
+                for (int i = aNode.Nodes.Count - 1; i >= 0; i--)
+                {
+                    aNode.Nodes[i].Remove();
+                }
+            }
+
+        }
+
+        private List<TreeNode> swapDown(List<TreeNode> nodes, int fromIndex, int toIndex)
+        {
+            TreeNode temp;
+            for (int i = fromIndex; i < toIndex; i++)
+            {
+                temp = nodes[i + 1];
+                nodes[i + 1] = nodes[i];
+                nodes[i] = temp;
+            }
+
+            return nodes;
+        }
+
+        private List<TreeNode> swapUp(List<TreeNode> nodes, int fromIndex, int toIndex)
+        {
+            TreeNode temp;
+            for (int i = fromIndex; i > toIndex; i--)
+            {
+                temp = nodes[i-1];
+                nodes[i - 1] = nodes[i];
+                nodes[i] = temp;
+            }
+
+            return nodes;
+        }
+
+        private void DrawLeafTopPlaceholders(TreeNode NodeOver)
+        {
+            Graphics g = this.treeView1.CreateGraphics();
+            int LeftPos = NodeOver.Bounds.Left;
+            int RightPos = this.treeView1.Width - 4;
+
+            Point[] LeftTriangle = new Point[5]{
+												   new Point(LeftPos, NodeOver.Bounds.Top - 4),
+												   new Point(LeftPos, NodeOver.Bounds.Top + 4),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Y),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Top - 1),
+												   new Point(LeftPos, NodeOver.Bounds.Top - 5)};
+
+            Point[] RightTriangle = new Point[5]{
+													new Point(RightPos, NodeOver.Bounds.Top - 4),
+													new Point(RightPos, NodeOver.Bounds.Top + 4),
+													new Point(RightPos - 4, NodeOver.Bounds.Y),
+													new Point(RightPos - 4, NodeOver.Bounds.Top - 1),
+													new Point(RightPos, NodeOver.Bounds.Top - 5)};
+
+
+            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
+            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
+            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Top), new Point(RightPos, NodeOver.Bounds.Top));
+
+        }//eom
+
+        private void DrawLeafBottomPlaceholders(TreeNode NodeOver, TreeNode ParentDragDrop)
+        {
+            Graphics g = this.treeView1.CreateGraphics();
+
+            // Once again, we are not dragging to node over, draw the placeholder using the ParentDragDrop bounds
+            int LeftPos, RightPos;
+            if (ParentDragDrop != null)
+                LeftPos = ParentDragDrop.Bounds.Left + 8;
+            else
+                LeftPos = NodeOver.Bounds.Left;
+            RightPos = this.treeView1.Width - 4;
+
+            Point[] LeftTriangle = new Point[5]{
+												   new Point(LeftPos, NodeOver.Bounds.Bottom),
+												   new Point(LeftPos, NodeOver.Bounds.Bottom),
+												   new Point(LeftPos, NodeOver.Bounds.Bottom),
+												   new Point(LeftPos, NodeOver.Bounds.Bottom),
+												   new Point(LeftPos, NodeOver.Bounds.Bottom)};
+
+            Point[] RightTriangle = new Point[5]{
+													new Point(RightPos, NodeOver.Bounds.Bottom),
+													new Point(RightPos, NodeOver.Bounds.Bottom),
+													new Point(RightPos, NodeOver.Bounds.Bottom),
+													new Point(RightPos, NodeOver.Bounds.Bottom),
+													new Point(RightPos, NodeOver.Bounds.Bottom)};
+
+
+            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
+            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
+            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Bottom), new Point(RightPos, NodeOver.Bounds.Bottom));
+        }//eom
+
     }
+
 }
+
+
