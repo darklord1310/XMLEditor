@@ -51,48 +51,65 @@ namespace XMLEditor
             InitializeComponent();
             createDataPath();
             treeView1.BeginUpdate();
-            treeView1.Nodes.Add("Test Menu");
-            treeView1.EndUpdate();
+            treeView1.Nodes.Add(createNormalTreeNode("asdasdsadasd"));
             treeView1.AllowDrop = true;
             // Add some additional nodes.
-            treeView1.Nodes[0].Nodes.Add("phoneList.doc");
-            treeView1.Nodes.Add("resume.doc");
-            createNode();
-
+            treeView1.Nodes[0].Nodes.Add(createNormalTreeNode("aaaaaa"));
+            treeView1.Nodes.Add(createNormalTreeNode("resume.doc"));
+            string[] str = new string[4];
+            str[0] = "bello";
+            str[1] = "lello";
+            str[2] = "gello";
+            str[3] = "rello";
+            createDropDownTreeNode("",str);
+            treeView1.EndUpdate();
             treeView1.ExpandAll();
         }
 
-        public void createNode()
+        public TreeNode createNormalTreeNode(string nodeName)
         {
-            //treeView1.Nodes.Add(new DropDownTreeNode("adsad"));
-            //MessageBox.Show(treeView1.Nodes[2]);
-            //treeView1.Nodes[2].
+            TreeNode node = new TreeNode(nodeName);
+            node.Name = nodeName;
+            return node;
+        }
 
-            DropDownTreeNode weightNode = new DropDownTreeNode("1/4 lb.");
-            weightNode.ComboBox.Items.Add("1/4 lb.");
-            weightNode.ComboBox.Items.Add("1/2 lb.");
-            weightNode.ComboBox.Items.Add("3/4 lb.");
-            weightNode.ComboBox.SelectedIndex = 0;
+        public DropDownTreeNode createDropDownTreeNode(string nodeName, string[] comboBoxValues)
+        {
+            DropDownTreeNode newnode = new DropDownTreeNode(nodeName);
+            newnode.Name = nodeName;
+            newnode.addValuesToComboBox(comboBoxValues);
+            return newnode;
+            
+            //DropDownTreeNode weightNode = new DropDownTreeNode("1/4 lb.");
+            //weightNode.ComboBox.Items.Add("1/4 lb.");
+            //weightNode.ComboBox.Items.Add("1/2 lb.");
+            //weightNode.ComboBox.Items.Add("3/4 lb.");
+            //weightNode.ComboBox.SelectedIndex = 0;
 
-            DropDownTreeNode pattyNode = new DropDownTreeNode("All beef patty");
-            pattyNode.ComboBox.Items.Add("All beef patty");
-            pattyNode.ComboBox.Items.Add("All chicken patty");
-            pattyNode.ComboBox.SelectedIndex = 0;
+            //DropDownTreeNode pattyNode = new DropDownTreeNode("All beef patty");
+            //pattyNode.ComboBox.Items.Add("All beef patty");
+            //pattyNode.ComboBox.Items.Add("All chicken patty");
+            //pattyNode.ComboBox.SelectedIndex = 0;
 
-            TreeNode meatNode = new TreeNode("Meat Selection");
-            meatNode.Nodes.Add(weightNode);
-            meatNode.Nodes.Add(pattyNode);
+            //TreeNode meatNode = new TreeNode("Meat Selection");
+            //meatNode.Nodes.Add(weightNode);
+            //meatNode.Nodes.Add(pattyNode);
 
-            //TreeNode burgerNode = new TreeNode("Hamburger Selection");
-            //burgerNode.Nodes.Add(condimentsNode);
-            //burgerNode.Nodes.Add(meatNode);
-            this.treeView1.Nodes.Add(meatNode);
-             
+            //this.treeView1.Nodes.Add(meatNode);
+            //return null;
         }
 
         private void addNode(TreeNode node)
         {
-            node.Nodes.Add(new DropDownTreeNode("Hello"));
+            string[] str = new string[4];
+            str[0] = "bello";
+            str[1] = "lello";
+            str[2] = "gello";
+            str[3] = "rello";
+            DropDownTreeNode dNode = createDropDownTreeNode("hello", str);
+            node.Nodes.Add(dNode);
+            node.Expand();
+            treeView1.ExpandNodeComboBox(dNode);
         }
 
         private void deleteNode(TreeNode node)
@@ -107,15 +124,62 @@ namespace XMLEditor
             if(item.ToString() == "Edit" )
             {
                 //DropDownTreeView bla = new DropDownTreeView();
+                treeView1.BeginUpdate();
                 treeView1.ExpandNodeComboBox(treeView1.SelectedNode);
+                treeView1.EndUpdate();
             }
             else if (item.ToString() == "Add")
             {
                 addNode(treeView1.SelectedNode);
+                DropDownTreeNode newnode = new DropDownTreeNode("");
+                // load the data into combobox
+                // select the default value for the combobox
+                //addAtSelectedTreeNode(treeView1.TopNode, treeView1.SelectedNode.Name, treeView1.SelectedNode.Level, newnode);
+                //treeView1.SelectedNode.Nodes.Add(newnode);
+                //treeView1.Nodes[treeView1.SelectedNode.Index].Nodes.Add(newnode);
+                //treeView1.EndUpdate();
+                
             }
             else if (item.ToString() == "Delete")
             {
                 deleteNode(treeView1.SelectedNode);
+            }
+        }
+        
+        /*
+         *  root        is the first node also known as the root of the node
+         *  name        is the name of the selected tree node which will add an
+         *              additional child node to it
+         *  nodeLevel   is the node level of the selected tree node
+         *  newnode     is the new child node going to add to the selected node
+         * 
+         */
+        private void addAtSelectedTreeNode(TreeNode root, String name, int nodeLevel, TreeNode newnode)
+        {
+            if (root.Name.Equals(name) && root.Level == nodeLevel)
+            {
+                root.Nodes.Add(newnode);
+                treeView1.ExpandAll();
+                treeView1.ExpandNodeComboBox(newnode);
+                Console.WriteLine("added");
+            }
+            else
+            {
+                foreach (TreeNode node in root.Nodes)
+                {
+                    if (node.Name.Equals(name) && node.Level == nodeLevel)
+                    {
+                        node.Nodes.Add(newnode);
+                        treeView1.ExpandAll();
+                        treeView1.ExpandNodeComboBox(newnode);
+                        Console.WriteLine("added");
+                    }
+                    else
+                    {
+                        if (node.Nodes.Count > 0)
+                            addAtSelectedTreeNode(node, name, nodeLevel, newnode);
+                    }
+                }
             }
         }
 

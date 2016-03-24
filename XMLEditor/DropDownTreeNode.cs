@@ -35,6 +35,15 @@ namespace XMLEditor
                     this.m_ComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
                 }
             }
+
+            public void addValuesToComboBox(string[] str)
+            {
+                foreach (string value in str)
+                {
+                    this.ComboBox.Items.Add(value);
+                }
+                this.ComboBox.SelectedIndex = 0;
+            }
      }
 
 
