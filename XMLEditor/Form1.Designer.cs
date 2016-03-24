@@ -69,7 +69,7 @@
             // 
             this.treeView1.Location = new System.Drawing.Point(13, 42);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(298, 326);
+            this.treeView1.Size = new System.Drawing.Size(231, 333);
             this.treeView1.TabIndex = 3;
             this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
             // 

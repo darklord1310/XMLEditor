@@ -97,13 +97,13 @@ namespace XMLEditor
 
                 if (node.Level >= 2)
                 {
-                    TreeNode newNode = null;
+                    TreeNode dNode = null;
                     if(node.Level == 2)
-                        newNode = createNormalTreeNode("TC_" + (node.Nodes.Count + 1).ToString("D4"));
+                        dNode = createNormalTreeNode("TC_" + (node.Nodes.Count + 1).ToString("D4"));
                     else
-                        newNode = createNormalTreeNode("SN_" + (node.Nodes.Count + 1).ToString("D4"));
+                        dNode = createNormalTreeNode("SN_" + (node.Nodes.Count + 1).ToString("D4"));
 
-                    node.Nodes.Add(newNode);
+                    node.Nodes.Add(dNode);
                     node.Expand();
                 }
                 else
@@ -124,7 +124,22 @@ namespace XMLEditor
 
         private void deleteNode(TreeNode node)
         {
+            TreeNode parent = node.Parent;
             node.Remove();
+
+            for (int i = 0; i < parent.Nodes.Count; i++)
+            {
+                if (parent.Level == 2)
+                {
+                    parent.Nodes[i].Name = "TC_" + (i + 1).ToString("D4");
+                    parent.Nodes[i].Text = "TC_" + (i + 1).ToString("D4");
+                }
+                else
+                {
+                    parent.Nodes[i].Name = "SN_" + (i + 1).ToString("D4");
+                    parent.Nodes[i].Text = "SN_" + (i + 1).ToString("D4");
+                }
+            }
         }
 
         private void removeAllChildNode(TreeNode node)
@@ -146,7 +161,7 @@ namespace XMLEditor
                 if(treeView1.SelectedNode.Nodes.Count > 0)
                 {
                     if (MessageBox.Show("Are you sure?\nAll child nodes will be remove", "Confirmation",
-                                         MessageBoxButtons.YesNo, 
+                                         MessageBoxButtons.YesNo,
                                          MessageBoxIcon.Question) == DialogResult.Yes)
                     {
                         removeAllChildNode(treeView1.SelectedNode);
