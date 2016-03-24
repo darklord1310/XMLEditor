@@ -324,7 +324,9 @@ namespace XMLEditor
                 Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
                 TreeNode DestinationNode = ((TreeView)sender).GetNodeAt(pt);
                 NewNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
-                handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
+
+                if (NewNode.Level == DestinationNode.Level)
+                    handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
             }
         }
 
@@ -334,8 +336,8 @@ namespace XMLEditor
             List<TreeNode> nodes;
 
             nodes = getNodeValues(parent);
-            
-            if(status > 0)
+
+            if (status > 0)
                 nodes = swapDown(nodes, fromIndex, toIndex);
             else
                 nodes = swapUp(nodes, fromIndex, toIndex);
@@ -394,72 +396,13 @@ namespace XMLEditor
             TreeNode temp;
             for (int i = fromIndex; i > toIndex; i--)
             {
-                temp = nodes[i-1];
+                temp = nodes[i - 1];
                 nodes[i - 1] = nodes[i];
                 nodes[i] = temp;
             }
 
             return nodes;
         }
-
-        private void DrawLeafTopPlaceholders(TreeNode NodeOver)
-        {
-            Graphics g = this.treeView1.CreateGraphics();
-            int LeftPos = NodeOver.Bounds.Left;
-            int RightPos = this.treeView1.Width - 4;
-
-            Point[] LeftTriangle = new Point[5]{
-												   new Point(LeftPos, NodeOver.Bounds.Top - 4),
-												   new Point(LeftPos, NodeOver.Bounds.Top + 4),
-												   new Point(LeftPos + 4, NodeOver.Bounds.Y),
-												   new Point(LeftPos + 4, NodeOver.Bounds.Top - 1),
-												   new Point(LeftPos, NodeOver.Bounds.Top - 5)};
-
-            Point[] RightTriangle = new Point[5]{
-													new Point(RightPos, NodeOver.Bounds.Top - 4),
-													new Point(RightPos, NodeOver.Bounds.Top + 4),
-													new Point(RightPos - 4, NodeOver.Bounds.Y),
-													new Point(RightPos - 4, NodeOver.Bounds.Top - 1),
-													new Point(RightPos, NodeOver.Bounds.Top - 5)};
-
-
-            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
-            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
-            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Top), new Point(RightPos, NodeOver.Bounds.Top));
-
-        }//eom
-
-        private void DrawLeafBottomPlaceholders(TreeNode NodeOver, TreeNode ParentDragDrop)
-        {
-            Graphics g = this.treeView1.CreateGraphics();
-
-            // Once again, we are not dragging to node over, draw the placeholder using the ParentDragDrop bounds
-            int LeftPos, RightPos;
-            if (ParentDragDrop != null)
-                LeftPos = ParentDragDrop.Bounds.Left + 8;
-            else
-                LeftPos = NodeOver.Bounds.Left;
-            RightPos = this.treeView1.Width - 4;
-
-            Point[] LeftTriangle = new Point[5]{
-												   new Point(LeftPos, NodeOver.Bounds.Bottom),
-												   new Point(LeftPos, NodeOver.Bounds.Bottom),
-												   new Point(LeftPos, NodeOver.Bounds.Bottom),
-												   new Point(LeftPos, NodeOver.Bounds.Bottom),
-												   new Point(LeftPos, NodeOver.Bounds.Bottom)};
-
-            Point[] RightTriangle = new Point[5]{
-													new Point(RightPos, NodeOver.Bounds.Bottom),
-													new Point(RightPos, NodeOver.Bounds.Bottom),
-													new Point(RightPos, NodeOver.Bounds.Bottom),
-													new Point(RightPos, NodeOver.Bounds.Bottom),
-													new Point(RightPos, NodeOver.Bounds.Bottom)};
-
-
-            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
-            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
-            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Bottom), new Point(RightPos, NodeOver.Bounds.Bottom));
-        }//eom
 
     }
 
