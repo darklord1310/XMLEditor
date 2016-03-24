@@ -40,6 +40,7 @@ namespace XMLEditor
                     this.m_CurrentNode.Bounds.Width + 25,
                     this.m_CurrentNode.Bounds.Height - 200);
 
+                //addValueToComboBox();
                 // Listen to the SelectedValueChanged
                 // event of the node's ComboBox
                 this.m_CurrentNode.ComboBox.SelectedValueChanged +=
@@ -85,6 +86,7 @@ namespace XMLEditor
         void comboBox_MouseClick(object sender, EventArgs e)
         {
             this.m_CurrentNode.Text = this.m_CurrentNode.ComboBox.SelectedValue.ToString();
+            this.m_CurrentNode.Name = this.m_CurrentNode.ComboBox.SelectedValue.ToString();
         }
 
         void ComboBox_DropDownClosed(object sender, EventArgs e)
