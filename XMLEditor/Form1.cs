@@ -20,6 +20,7 @@ namespace XMLEditor
         string moduleID = string.Empty;
         string funcName = string.Empty;
         TestMenu[] tm = new TestMenu[7];
+        Category cat = new Category();
 
         Excel.Application xlApp = new Excel.Application();
         Excel.Workbook xlWorkbook;
@@ -125,9 +126,10 @@ namespace XMLEditor
         private void deleteNode(TreeNode node)
         {
             TreeNode parent = node.Parent;
+            int index = node.Index;
             node.Remove();
 
-            for (int i = 0; i < parent.Nodes.Count; i++)
+            for (int i = index; i < parent.Nodes.Count; i++)
             {
                 if (parent.Level == 2)
                 {
