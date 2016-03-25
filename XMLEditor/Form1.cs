@@ -30,6 +30,7 @@ namespace XMLEditor
 
         string appPath, folderPath;
         ContextMenuStrip docMenu;
+        Progress_Bar pb;
 
         public class InvalidTestMenu : Exception
         {
@@ -50,7 +51,6 @@ namespace XMLEditor
         public Form1()
         {
             InitializeComponent();
-            createDataPath();
             createTreeView();
             cBoxFunc.DropDownStyle = ComboBoxStyle.DropDownList;
         }
@@ -259,6 +259,25 @@ namespace XMLEditor
                 MessageBox.Show("AppData folder not found. It will be created automatically");
                 Directory.CreateDirectory(folderPath);
             }
+            else
+            {
+                if(File.Exists(Path.Combine(folderPath, "V5S_Diag Command.xls")) )
+                {
+                    xlWorkbook = xlApp.Workbooks.Open(Path.Combine(folderPath, "V5S_Diag Command"));
+                    Progress_Bar f = new Progress_Bar();
+                    f.StartPosition = FormStartPosition.Manual;
+                    f.Location = new Point(Location.X + (Width - f.Width) / 2, Location.Y + (Height - f.Height) / 2);
+                    f.Show(this);         //Make sure we're the owner
+                    this.Enabled = false; //Disable ourselves
+                    extractDataFromExcel();
+                    this.Enabled = true;  //We're done, enable ourselves
+                    f.Close();            //Dispose message form
+                }
+                else
+                {
+                    MessageBox.Show("Excel file with name V5S_Diag Command not found!");
+                }
+            }
         }
 
         private void createContextMenuStrip(int nodeLevel)
@@ -280,13 +299,13 @@ namespace XMLEditor
             else if (nodeLevel == 0 && treeView1.Nodes["TestMenu"].Nodes.Count > 0)
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { });
             else if (nodeLevel == 1 && treeView1.Nodes["TestMenu"].Nodes[0].Nodes.Count > 0)
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { deleteLabel, renameLabel });
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { renameLabel, deleteLabel });
             else if (nodeLevel == 0)    //Test Menu
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel });
             else if (nodeLevel == 3)    //Test Case
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel });
             else
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel, renameLabel });
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, renameLabel, deleteLabel });
 
             docMenu.ItemClicked += new ToolStripItemClickedEventHandler(contextMenu_ItemClicked);
         }
@@ -324,6 +343,7 @@ namespace XMLEditor
                     }
                 }
             }
+            
             catch (InvalidTestMenu ex) { }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
 
@@ -427,7 +447,7 @@ namespace XMLEditor
         {
             //Create a new instance of the OpenFileDialog
             OpenFileDialog dialog = new OpenFileDialog();
-
+            
             //Set the file filter
             dialog.Filter = "Excel files (*.xls)|*.xls";
 
@@ -464,9 +484,35 @@ namespace XMLEditor
                 Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
                 TreeNode DestinationNode = ((TreeView)sender).GetNodeAt(pt);
                 NewNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
-                handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
+
+                if(DestinationNode != null)
+                {
+                    if (NewNode.Level == DestinationNode.Level)
+                        handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
+
+                    if(NewNode.Parent.Level == 2 || NewNode.Parent.Level == 3)
+                        renumberAllNodes(NewNode.Parent);
+                }
             }
         }
+
+        private void renumberAllNodes(TreeNode parent)
+        {
+            string name;
+            int integer = 1;
+
+            foreach (TreeNode element in parent.Nodes)
+            {
+                if (parent.Level == 2)
+                    name = "TC_" + (integer).ToString("D4");
+                else
+                    name = "SN_" + (integer).ToString("D4");
+                element.Name = name;
+                element.Text = name;
+                integer++;
+            }
+        }
+
 
         private void handleNodeMoving(TreeNode parent, int fromIndex, int toIndex)
         {
@@ -474,8 +520,8 @@ namespace XMLEditor
             List<TreeNode> nodes;
 
             nodes = getNodeValues(parent);
-            
-            if(status > 0)
+
+            if (status > 0)
                 nodes = swapDown(nodes, fromIndex, toIndex);
             else
                 nodes = swapUp(nodes, fromIndex, toIndex);
@@ -522,7 +568,7 @@ namespace XMLEditor
             TreeNode temp;
             for (int i = fromIndex; i > toIndex; i--)
             {
-                temp = nodes[i-1];
+                temp = nodes[i - 1];
                 nodes[i - 1] = nodes[i];
                 nodes[i] = temp;
             }
@@ -530,64 +576,27 @@ namespace XMLEditor
             return nodes;
         }
 
-        private void DrawLeafTopPlaceholders(TreeNode NodeOver)
+        private void Form1_Shown(object sender, EventArgs e)
         {
-            Graphics g = this.treeView1.CreateGraphics();
-            int LeftPos = NodeOver.Bounds.Left;
-            int RightPos = this.treeView1.Width - 4;
+            createDataPath();
+        }
 
-            Point[] LeftTriangle = new Point[5]{
-												   new Point(LeftPos, NodeOver.Bounds.Top - 4),
-												   new Point(LeftPos, NodeOver.Bounds.Top + 4),
-												   new Point(LeftPos + 4, NodeOver.Bounds.Y),
-												   new Point(LeftPos + 4, NodeOver.Bounds.Top - 1),
-												   new Point(LeftPos, NodeOver.Bounds.Top - 5)};
-
-            Point[] RightTriangle = new Point[5]{
-													new Point(RightPos, NodeOver.Bounds.Top - 4),
-													new Point(RightPos, NodeOver.Bounds.Top + 4),
-													new Point(RightPos - 4, NodeOver.Bounds.Y),
-													new Point(RightPos - 4, NodeOver.Bounds.Top - 1),
-													new Point(RightPos, NodeOver.Bounds.Top - 5)};
-
-
-            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
-            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
-            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Top), new Point(RightPos, NodeOver.Bounds.Top));
-
-        }//eom
-
-        private void DrawLeafBottomPlaceholders(TreeNode NodeOver, TreeNode ParentDragDrop)
+        /*
+        private void showMsgBox(string content)
         {
-            Graphics g = this.treeView1.CreateGraphics();
-
-            // Once again, we are not dragging to node over, draw the placeholder using the ParentDragDrop bounds
-            int LeftPos, RightPos;
-            if (ParentDragDrop != null)
-                LeftPos = ParentDragDrop.Bounds.Left + 8;
-            else
-                LeftPos = NodeOver.Bounds.Left;
-            RightPos = this.treeView1.Width - 4;
-
-            Point[] LeftTriangle = new Point[5]{
-												   new Point(LeftPos, NodeOver.Bounds.Bottom),
-												   new Point(LeftPos, NodeOver.Bounds.Bottom),
-												   new Point(LeftPos, NodeOver.Bounds.Bottom),
-												   new Point(LeftPos, NodeOver.Bounds.Bottom),
-												   new Point(LeftPos, NodeOver.Bounds.Bottom)};
-
-            Point[] RightTriangle = new Point[5]{
-													new Point(RightPos, NodeOver.Bounds.Bottom),
-													new Point(RightPos, NodeOver.Bounds.Bottom),
-													new Point(RightPos, NodeOver.Bounds.Bottom),
-													new Point(RightPos, NodeOver.Bounds.Bottom),
-													new Point(RightPos, NodeOver.Bounds.Bottom)};
-
-
-            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
-            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
-            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Bottom), new Point(RightPos, NodeOver.Bounds.Bottom));
-        }//eom
+            this.Activated -= TestServerGUI_Activated;
+            this.Deactivate -= TestServerGUI_Deactivate;
+            MessageBox.Show(content);
+            this.Deactivate += TestServerGUI_Deactivate;
+        }
+        
+        private void showMsgBox(string content, MessageBoxIcon iconSelection)
+        {
+            this.Activated -= TestServerGUI_Activated;
+            this.Deactivate -= TestServerGUI_Deactivate;
+            MessageBox.Show(content, "", MessageBoxButtons.OK, iconSelection);
+            this.Deactivate += TestServerGUI_Deactivate;
+        } */
 
         private void button1_Click(object sender, EventArgs e)
         {
