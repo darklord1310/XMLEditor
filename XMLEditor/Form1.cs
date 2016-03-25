@@ -123,7 +123,7 @@ namespace XMLEditor
                         treeView1.ExpandNodeComboBox(dNode);
                     }
                     else
-                        MessageBox.Show("No module available!");
+                        showMsgBox("No module available!", MessageBoxIcon.Warning);
                 }
             }
             catch (NoExcelSelected ex) { }
@@ -213,7 +213,7 @@ namespace XMLEditor
 
             if (!Directory.Exists(folderPath))
             {
-                MessageBox.Show("AppData folder not found. It will be created automatically");
+                showMsgBox("AppData folder not found. It will be created automatically", MessageBoxIcon.Information);
                 Directory.CreateDirectory(folderPath);
             }
             else
@@ -233,7 +233,7 @@ namespace XMLEditor
                 }
                 else
                 {
-                    MessageBox.Show("CSV file with name " + filename + " not found.");
+                    showMsgBox("CSV file with name " + filename + " not found.", MessageBoxIcon.Warning);
                 }
             }
         }
@@ -558,23 +558,14 @@ namespace XMLEditor
             createDataPath();
         }
 
-        /*
-        private void showMsgBox(string content)
-        {
-            this.Activated -= TestServerGUI_Activated;
-            this.Deactivate -= TestServerGUI_Deactivate;
-            MessageBox.Show(content);
-            this.Deactivate += TestServerGUI_Deactivate;
-        }
-
         private void showMsgBox(string content, MessageBoxIcon iconSelection)
         {
-            this.Activated -= TestServerGUI_Activated;
-            this.Deactivate -= TestServerGUI_Deactivate;
+            //this.Activated -= TestServerGUI_Activated;
+            //this.Deactivate -= TestServerGUI_Deactivate;
             MessageBox.Show(content, "", MessageBoxButtons.OK, iconSelection);
-            this.Deactivate += TestServerGUI_Deactivate;
+            //this.Deactivate += TestServerGUI_Deactivate;
         }
-         * */
+
 
         private void treeView1_DragOver(object sender, System.Windows.Forms.DragEventArgs e)
         {
