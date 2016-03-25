@@ -29,6 +29,7 @@ namespace XMLEditor
 
         string appPath, folderPath;
         ContextMenuStrip docMenu;
+        Progress_Bar pb;
 
         public class InvalidTestMenu : Exception
         {
@@ -49,7 +50,6 @@ namespace XMLEditor
         public Form1()
         {
             InitializeComponent();
-            createDataPath();
             createTreeView();
         }
 
@@ -209,6 +209,25 @@ namespace XMLEditor
                 MessageBox.Show("AppData folder not found. It will be created automatically");
                 Directory.CreateDirectory(folderPath);
             }
+            else
+            {
+                if(File.Exists(Path.Combine(folderPath, "V5S_Diag-Command.xls")) )
+                {
+                    xlWorkbook = xlApp.Workbooks.Open(Path.Combine(folderPath, "V5S_Diag-Command"));
+                    Progress_Bar f = new Progress_Bar();
+                    f.StartPosition = FormStartPosition.Manual;
+                    f.Location = new Point(Location.X + (Width - f.Width) / 2, Location.Y + (Height - f.Height) / 2);
+                    f.Show(this);         //Make sure we're the owner
+                    this.Enabled = false; //Disable ourselves
+                    extractDataFromExcel();
+                    this.Enabled = true;  //We're done, enable ourselves
+                    f.Close();            //Dispose message form
+                }
+                else
+                {
+                    MessageBox.Show("CSV file with name V5S_Diag-Command not found!");
+                }
+            }
         }
 
         private void createContextMenuStrip(int nodeLevel)
@@ -274,6 +293,7 @@ namespace XMLEditor
                     }
                 }
             }
+            
             catch (InvalidTestMenu ex) { }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
 
@@ -377,7 +397,7 @@ namespace XMLEditor
         {
             //Create a new instance of the OpenFileDialog
             OpenFileDialog dialog = new OpenFileDialog();
-
+            
             //Set the file filter
             dialog.Filter = "Excel files (*.xls)|*.xls";
 
@@ -415,8 +435,11 @@ namespace XMLEditor
                 TreeNode DestinationNode = ((TreeView)sender).GetNodeAt(pt);
                 NewNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
 
-                if (NewNode.Level == DestinationNode.Level)
-                    handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
+                if(DestinationNode != null)
+                {
+                    if (NewNode.Level == DestinationNode.Level)
+                        handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
+                }
             }
         }
 
@@ -494,6 +517,28 @@ namespace XMLEditor
             return nodes;
         }
 
+        private void Form1_Shown(object sender, EventArgs e)
+        {
+            createDataPath();
+        }
+
+        /*
+        private void showMsgBox(string content)
+        {
+            this.Activated -= TestServerGUI_Activated;
+            this.Deactivate -= TestServerGUI_Deactivate;
+            MessageBox.Show(content);
+            this.Deactivate += TestServerGUI_Deactivate;
+        }
+
+        private void showMsgBox(string content, MessageBoxIcon iconSelection)
+        {
+            this.Activated -= TestServerGUI_Activated;
+            this.Deactivate -= TestServerGUI_Deactivate;
+            MessageBox.Show(content, "", MessageBoxButtons.OK, iconSelection);
+            this.Deactivate += TestServerGUI_Deactivate;
+        }
+         * */
     }
 
 }

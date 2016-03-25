@@ -66,6 +66,12 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="Progress Bar.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Progress Bar.Designer.cs">
+      <DependentUpon>Progress Bar.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqNum.cs" />
     <Compile Include="TestCase.cs" />
@@ -75,6 +81,9 @@
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Progress Bar.resx">
+      <DependentUpon>Progress Bar.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

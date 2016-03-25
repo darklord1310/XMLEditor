@@ -34,7 +34,6 @@
             this.editCategoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lblTcDesc = new System.Windows.Forms.Label();
             this.txtBoxTcDesc = new System.Windows.Forms.TextBox();
-            this.treeView1 = new XMLEditor.DropDownTreeView();
             this.lblSqDesc = new System.Windows.Forms.Label();
             this.txtBoxSqDesc = new System.Windows.Forms.TextBox();
             this.lblDiagCmd = new System.Windows.Forms.Label();
@@ -45,6 +44,8 @@
             this.txtBoxPara = new System.Windows.Forms.TextBox();
             this.lblExpOut = new System.Windows.Forms.Label();
             this.txtBoxExpOut = new System.Windows.Forms.TextBox();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.treeView1 = new XMLEditor.DropDownTreeView();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -94,18 +95,6 @@
             this.txtBoxTcDesc.Name = "txtBoxTcDesc";
             this.txtBoxTcDesc.Size = new System.Drawing.Size(226, 42);
             this.txtBoxTcDesc.TabIndex = 5;
-            // 
-            // treeView1
-            // 
-            this.treeView1.BackColor = System.Drawing.SystemColors.Control;
-            this.treeView1.Location = new System.Drawing.Point(13, 42);
-            this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(231, 316);
-            this.treeView1.TabIndex = 3;
-            this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
-            this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
-            this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
-            this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
             // 
             // lblSqDesc
             // 
@@ -191,6 +180,23 @@
             this.txtBoxExpOut.Size = new System.Drawing.Size(226, 42);
             this.txtBoxExpOut.TabIndex = 15;
             // 
+            // backgroundWorker1
+            // 
+            this.backgroundWorker1.WorkerReportsProgress = true;
+            this.backgroundWorker1.WorkerSupportsCancellation = true;
+            // 
+            // treeView1
+            // 
+            this.treeView1.BackColor = System.Drawing.SystemColors.Control;
+            this.treeView1.Location = new System.Drawing.Point(13, 42);
+            this.treeView1.Name = "treeView1";
+            this.treeView1.Size = new System.Drawing.Size(231, 316);
+            this.treeView1.TabIndex = 3;
+            this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
+            this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
+            this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
+            this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -213,6 +219,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "XML Editor";
+            this.Shown += new System.EventHandler(this.Form1_Shown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -239,6 +246,7 @@
         private System.Windows.Forms.TextBox txtBoxPara;
         private System.Windows.Forms.Label lblExpOut;
         private System.Windows.Forms.TextBox txtBoxExpOut;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
     }
 }
 
