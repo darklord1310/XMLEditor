@@ -249,13 +249,13 @@ namespace XMLEditor
             else if (nodeLevel == 0 && treeView1.Nodes["TestMenu"].Nodes.Count > 0)
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { });
             else if (nodeLevel == 1 && treeView1.Nodes["TestMenu"].Nodes[0].Nodes.Count > 0)
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { deleteLabel, renameLabel });
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { renameLabel, deleteLabel });
             else if (nodeLevel == 0)    //Test Menu
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel });
             else if (nodeLevel == 3)    //Test Case
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel });
             else
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel, renameLabel });
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, renameLabel, deleteLabel });
 
             docMenu.ItemClicked += new ToolStripItemClickedEventHandler(contextMenu_ItemClicked);
         }
@@ -439,9 +439,30 @@ namespace XMLEditor
                 {
                     if (NewNode.Level == DestinationNode.Level)
                         handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
+
+                    if(NewNode.Parent.Level == 2 || NewNode.Parent.Level == 3)
+                        renumberAllNodes(NewNode.Parent);
                 }
             }
         }
+
+        private void renumberAllNodes(TreeNode parent)
+        {
+            string name;
+            int integer = 1;
+
+            foreach (TreeNode element in parent.Nodes)
+            {
+                if (parent.Level == 2)
+                    name = "TC_" + (integer).ToString("D4");
+                else
+                    name = "SN_" + (integer).ToString("D4");
+                element.Name = name;
+                element.Text = name;
+                integer++;
+            }
+        }
+
 
         private void handleNodeMoving(TreeNode parent, int fromIndex, int toIndex)
         {
