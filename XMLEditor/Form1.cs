@@ -562,9 +562,15 @@ namespace XMLEditor
             foreach (TreeNode element in parent.Nodes)
             {
                 if (parent.Level == 2)
+                {
                     name = "TC_" + (integer).ToString("D4");
+                    cat.tc[element.Index].setTcNo(name);
+                }
                 else
+                {
                     name = "SN_" + (integer).ToString("D4");
+                    cat.tc[element.Parent.Index].seqNo[element.Index].setSeqNo((integer).ToString("D4"));
+                }
                 element.Name = name;
                 element.Text = name;
                 integer++;
