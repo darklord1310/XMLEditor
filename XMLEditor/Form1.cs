@@ -10,18 +10,24 @@ using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using System.Data.SQLite;
 using System.IO;
+using System.Reflection;
 
 namespace XMLEditor
 {
     public partial class Form1 : Form
     {
         int num = 0;
+        string filename = "V5S_Diag Command";
         string moduleName = string.Empty;
         string moduleID = string.Empty;
         string funcName = string.Empty;
         string comboBoxSelectedItem = string.Empty;
         TestMenu[] tm = new TestMenu[7];
         public Category cat = new Category();
+
+        private string NodeMap;
+        private const int MAPSIZE = 128;
+        private StringBuilder NewNodeMap = new StringBuilder(MAPSIZE);
 
         Excel.Application xlApp = new Excel.Application();
         Excel.Workbook xlWorkbook;
@@ -30,7 +36,7 @@ namespace XMLEditor
 
         string appPath, folderPath;
         ContextMenuStrip docMenu;
-        Progress_Bar pb;
+        enum Images { NODE, ADD, DELETE, EDIT };
 
         public class ShowErrorMessageException : Exception
         {
@@ -43,6 +49,7 @@ namespace XMLEditor
         public Form1()
         {
             InitializeComponent();
+            this.treeView1.ImageList = TreeviewIL;
             createTreeView();
             cBoxFunc.DropDownStyle = ComboBoxStyle.DropDownList;
         }
@@ -133,7 +140,9 @@ namespace XMLEditor
                         treeView1.ExpandNodeComboBox(dNode);
                     }
                     else
-                        MessageBox.Show("No module available for " + node.Text + "!");
+                    {
+                        showMsgBox("No module available for " + node.Text + "!", MessageBoxIcon.Warning);
+                    }
                 }
             }
             catch (ShowErrorMessageException ex) { }
@@ -284,7 +293,7 @@ namespace XMLEditor
                 {
                     treeView1.SelectedNode = treeView1.GetNodeAt(e.X, e.Y);         // get the tree node on mouse right click
                     treeView1.SelectedNode.BackColor = SystemColors.HighlightText;      // highlight the selected node
-                    Point p = new Point(treeView1.SelectedNode.Bounds.Right + 15, treeView1.SelectedNode.Bounds.Bottom + 25);
+                    Point p = new Point(treeView1.SelectedNode.Bounds.Right + 16, treeView1.SelectedNode.Bounds.Bottom + 26);
                     createContextMenuStrip(treeView1.SelectedNode.Level);
                     docMenu.Show(PointToScreen(p));
                 }
@@ -299,14 +308,14 @@ namespace XMLEditor
 
             if (!Directory.Exists(folderPath))
             {
-                MessageBox.Show("AppData folder not found. It will be created automatically");
+                showMsgBox("AppData folder not found. It will be created automatically", MessageBoxIcon.Information);
                 Directory.CreateDirectory(folderPath);
             }
             else
             {
-                if(File.Exists(Path.Combine(folderPath, "V5S_Diag Command.xls")) )
+                if(File.Exists(Path.Combine(folderPath, filename + ".xls")) )
                 {
-                    xlWorkbook = xlApp.Workbooks.Open(Path.Combine(folderPath, "V5S_Diag Command"));
+                    xlWorkbook = xlApp.Workbooks.Open(Path.Combine(folderPath, filename));
                     Progress_Bar f = new Progress_Bar();
                     f.StartPosition = FormStartPosition.Manual;
                     f.Location = new Point(Location.X + (Width - f.Width) / 2, Location.Y + (Height - f.Height) / 2);
@@ -319,7 +328,7 @@ namespace XMLEditor
                 }
                 else
                 {
-                    MessageBox.Show("Excel file with name 'V5S_Diag Command' not found!");
+                    showMsgBox("Excel file with name " + filename + " not found.", MessageBoxIcon.Warning);
                 }
             }
         }
@@ -332,10 +341,13 @@ namespace XMLEditor
             //Create some menu items.
             ToolStripMenuItem deleteLabel = new ToolStripMenuItem();
             deleteLabel.Text = "Delete";
+            deleteLabel.Image = TreeviewIL.Images[(int)Images.DELETE];
             ToolStripMenuItem renameLabel = new ToolStripMenuItem();
             renameLabel.Text = "Edit";
+            renameLabel.Image = TreeviewIL.Images[(int)Images.EDIT];
             ToolStripMenuItem addLabel = new ToolStripMenuItem();
             addLabel.Text = "Add";
+            addLabel.Image = TreeviewIL.Images[(int)Images.ADD];
 
             //Add the menu items to the menu.
             if (nodeLevel == 4) //Sequence Number
@@ -531,12 +543,15 @@ namespace XMLEditor
                 if(DestinationNode != null)
                 {
                     if (NewNode.Level == DestinationNode.Level)
+                    {
                         handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
-
-                    if(NewNode.Parent.Level == 2 || NewNode.Parent.Level == 3)
-                        renumberAllNodes(NewNode.Parent);
+                        if (NewNode.Parent.Level == 2 || NewNode.Parent.Level == 3)
+                            renumberAllNodes(NewNode.Parent);
+                    } 
                 }
+                DestinationNode.BackColor = Color.White;
             }
+            this.Refresh();
         }
 
         private void renumberAllNodes(TreeNode parent)
@@ -624,22 +639,13 @@ namespace XMLEditor
             createDataPath();
         }
 
-        /*
-        private void showMsgBox(string content)
-        {
-            this.Activated -= TestServerGUI_Activated;
-            this.Deactivate -= TestServerGUI_Deactivate;
-            MessageBox.Show(content);
-            this.Deactivate += TestServerGUI_Deactivate;
-        }
-        
         private void showMsgBox(string content, MessageBoxIcon iconSelection)
         {
-            this.Activated -= TestServerGUI_Activated;
-            this.Deactivate -= TestServerGUI_Deactivate;
+            //this.Activated -= TestServerGUI_Activated;
+            //this.Deactivate -= TestServerGUI_Deactivate;
             MessageBox.Show(content, "", MessageBoxButtons.OK, iconSelection);
-            this.Deactivate += TestServerGUI_Deactivate;
-        } */
+            //this.Deactivate += TestServerGUI_Deactivate;
+        }
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -647,18 +653,245 @@ namespace XMLEditor
 
         }
 
+        private void treeView1_DragOver(object sender, System.Windows.Forms.DragEventArgs e)
+        {
+            TreeNode NodeOver = this.treeView1.GetNodeAt(this.treeView1.PointToClient(Cursor.Position));
+            TreeNode NodeMoving = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
+
+            if(NodeOver != null)
+            {
+                if (NodeOver.PrevVisibleNode != null)
+                {
+                    NodeOver.PrevVisibleNode.BackColor = Color.White;
+                }
+                if (NodeOver.NextVisibleNode != null)
+                {
+                    NodeOver.NextVisibleNode.BackColor = Color.White;
+                }
+                NodeOver.BackColor = Color.Aquamarine;
+            }
+
+
+            // A bit long, but to summarize, process the following code only if the nodeover is null
+            // and either the nodeover is not the same thing as nodemoving UNLESSS nodeover happens
+            // to be the last node in the branch (so we can allow drag & drop below a parent branch)
+            if (NodeOver != null && (NodeOver != NodeMoving || (NodeOver.Parent != null && NodeOver.Index == (NodeOver.Parent.Nodes.Count - 1))))
+            {
+                int OffsetY = this.treeView1.PointToClient(Cursor.Position).Y - NodeOver.Bounds.Top;
+                int NodeOverImageWidth = this.treeView1.ImageList.Images[(int)Images.NODE].Size.Width + 8;
+                Graphics g = this.treeView1.CreateGraphics();
+
+                if (OffsetY < (NodeOver.Bounds.Height / 2))
+                {
+                    #region If NodeOver is a child then cancel
+                    TreeNode tnParadox = NodeOver;
+                    while (tnParadox.Parent != null)
+                    {
+                        if (tnParadox.Parent == NodeMoving)
+                        {
+                            this.NodeMap = "";
+                            return;
+                        }
+
+                        tnParadox = tnParadox.Parent;
+                    }
+                    #endregion
+                    #region Store the placeholder info into a pipe delimited string
+                    SetNewNodeMap(NodeOver, false);
+                    if (SetMapsEqual() == true)
+                        return;
+                    #endregion
+                    #region Clear placeholders above and below
+                    this.Refresh();
+                    #endregion
+                    #region Draw the placeholders
+                    this.DrawLeafTopPlaceholders(NodeOver);
+                    #endregion
+                }
+                else
+                {
+                    #region If NodeOver is a child then cancel
+                    TreeNode tnParadox = NodeOver;
+                    while (tnParadox.Parent != null)
+                    {
+                        if (tnParadox.Parent == NodeMoving)
+                        {
+                            this.NodeMap = "";
+                            return;
+                        }
+
+                        tnParadox = tnParadox.Parent;
+                    }
+                    #endregion
+                    #region Allow drag drop to parent branches
+                    TreeNode ParentDragDrop = null;
+                    // If the node the mouse is over is the last node of the branch we should allow
+                    // the ability to drop the "nodemoving" node BELOW the parent node
+                    if (NodeOver.Parent != null && NodeOver.Index == (NodeOver.Parent.Nodes.Count - 1))
+                    {
+                        int XPos = this.treeView1.PointToClient(Cursor.Position).X;
+                        if (XPos < NodeOver.Bounds.Left)
+                        {
+                            ParentDragDrop = NodeOver.Parent;
+
+                            if (XPos < (ParentDragDrop.Bounds.Left - this.treeView1.ImageList.Images[ParentDragDrop.ImageIndex].Size.Width))
+                            {
+                                if (ParentDragDrop.Parent != null)
+                                    ParentDragDrop = ParentDragDrop.Parent;
+                            }
+                        }
+                    }
+                    #endregion
+                    #region Store the placeholder info into a pipe delimited string
+                    // Since we are in a special case here, use the ParentDragDrop node as the current "nodeover"
+                    SetNewNodeMap(ParentDragDrop != null ? ParentDragDrop : NodeOver, true);
+                    if (SetMapsEqual() == true)
+                        return;
+                    #endregion
+                    #region Clear placeholders above and below
+                    this.Refresh();
+                    #endregion
+                    #region Draw the placeholders
+                    DrawLeafBottomPlaceholders(NodeOver, ParentDragDrop);
+                    #endregion
+                }
+            }
+        }
+
+        private void txtBoxPara_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (string.IsNullOrEmpty(txtBoxPara.Text))
+                {
+                    MessageBox.Show("Please enter the parmeter!");
+                    txtBoxSqDesc.Text = string.Empty;
+                }
+                else
+                {
+                    if (treeView1.SelectedNode.Level == 3)
+                        cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setPara(txtBoxPara.Text);
+                    else
+                        cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setPara(txtBoxPara.Text);
+                    txtBoxPara.Enabled = false;
+                    lblPara.Text = "Parameter";
+                    txtBoxExpOut.Enabled = true;
+                    txtBoxExpOut.Focus();
+                    lblExpOut.Text += " (Press enter to continue)";
+                }
+            }
+        }
+
+        private void DrawLeafTopPlaceholders(TreeNode NodeOver)
+        {
+            Graphics g = this.treeView1.CreateGraphics();
+
+            int NodeOverImageWidth = this.treeView1.ImageList.Images[(int)Images.NODE].Size.Width + 8;
+            int LeftPos = NodeOver.Bounds.Left - NodeOverImageWidth;
+            int RightPos = this.treeView1.Width - 4;
+
+            Point[] LeftTriangle = new Point[5]{
+												   new Point(LeftPos, NodeOver.Bounds.Top - 4),
+												   new Point(LeftPos, NodeOver.Bounds.Top + 4),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Y),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Top - 1),
+												   new Point(LeftPos, NodeOver.Bounds.Top - 5)};
+
+            Point[] RightTriangle = new Point[5]{
+													new Point(RightPos, NodeOver.Bounds.Top - 4),
+													new Point(RightPos, NodeOver.Bounds.Top + 4),
+													new Point(RightPos - 4, NodeOver.Bounds.Y),
+													new Point(RightPos - 4, NodeOver.Bounds.Top - 1),
+													new Point(RightPos, NodeOver.Bounds.Top - 5)};
+
+
+            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
+            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
+            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Top), new Point(RightPos, NodeOver.Bounds.Top));
+
+        }//eom
+
+        private void DrawLeafBottomPlaceholders(TreeNode NodeOver, TreeNode ParentDragDrop)
+        {
+            Graphics g = this.treeView1.CreateGraphics();
+
+            int NodeOverImageWidth = this.treeView1.ImageList.Images[(int)Images.NODE].Size.Width + 8;
+            // Once again, we are not dragging to node over, draw the placeholder using the ParentDragDrop bounds
+            int LeftPos, RightPos;
+            if (ParentDragDrop != null)
+                LeftPos = ParentDragDrop.Bounds.Left - (this.treeView1.ImageList.Images[ParentDragDrop.ImageIndex].Size.Width + 8);
+            else
+                LeftPos = NodeOver.Bounds.Left - NodeOverImageWidth;
+            RightPos = this.treeView1.Width - 4;
+
+            Point[] LeftTriangle = new Point[5]{
+												   new Point(LeftPos, NodeOver.Bounds.Bottom - 4),
+												   new Point(LeftPos, NodeOver.Bounds.Bottom + 4),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Bottom),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Bottom - 1),
+												   new Point(LeftPos, NodeOver.Bounds.Bottom - 5)};
+
+            Point[] RightTriangle = new Point[5]{
+													new Point(RightPos, NodeOver.Bounds.Bottom - 4),
+													new Point(RightPos, NodeOver.Bounds.Bottom + 4),
+													new Point(RightPos - 4, NodeOver.Bounds.Bottom),
+													new Point(RightPos - 4, NodeOver.Bounds.Bottom - 1),
+													new Point(RightPos, NodeOver.Bounds.Bottom - 5)};
+
+
+            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
+            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
+            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Bottom), new Point(RightPos, NodeOver.Bounds.Bottom));
+        }//eom
+
+        private void SetNewNodeMap(TreeNode tnNode, bool boolBelowNode)
+        {
+            NewNodeMap.Length = 0;
+
+            if (boolBelowNode)
+                NewNodeMap.Insert(0, (int)tnNode.Index + 1);
+            else
+                NewNodeMap.Insert(0, (int)tnNode.Index);
+            TreeNode tnCurNode = tnNode;
+
+            while (tnCurNode.Parent != null)
+            {
+                tnCurNode = tnCurNode.Parent;
+
+                if (NewNodeMap.Length == 0 && boolBelowNode == true)
+                {
+                    NewNodeMap.Insert(0, (tnCurNode.Index + 1) + "|");
+                }
+                else
+                {
+                    NewNodeMap.Insert(0, tnCurNode.Index + "|");
+                }
+            }
+        }//oem
+
+        private bool SetMapsEqual()
+        {
+            if (this.NewNodeMap.ToString() == this.NodeMap)
+                return true;
+            else
+            {
+                this.NodeMap = this.NewNodeMap.ToString();
+                return false;
+            }
+        }
+
         private void txtBoxTcDesc_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                if(string.IsNullOrEmpty(txtBoxTcDesc.Text))
+                if (string.IsNullOrEmpty(txtBoxTcDesc.Text))
                 {
                     MessageBox.Show("Please enter the description!");
                     txtBoxTcDesc.Text = string.Empty;
                 }
                 else
                 {
-                    if(treeView1.SelectedNode.Level == 2)
+                    if (treeView1.SelectedNode.Level == 2)
                         cat.tc[treeView1.SelectedNode.Nodes.Count - 1].setDesc(txtBoxTcDesc.Text);
                     else
                         cat.tc[treeView1.SelectedNode.Index].setDesc(txtBoxTcDesc.Text);
@@ -689,30 +922,6 @@ namespace XMLEditor
                     lblSqDesc.Text = "Seq No Description";
                     cBoxFunc.Enabled = true;
                     cBoxFunc.DroppedDown = true;
-                }
-            }
-        }
-
-        private void txtBoxPara_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                if (string.IsNullOrEmpty(txtBoxPara.Text))
-                {
-                    MessageBox.Show("Please enter the parmeter!");
-                    txtBoxSqDesc.Text = string.Empty;
-                }
-                else
-                {
-                    if (treeView1.SelectedNode.Level == 3)
-                        cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setPara(txtBoxPara.Text);
-                    else
-                        cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setPara(txtBoxPara.Text);
-                    txtBoxPara.Enabled = false;
-                    lblPara.Text = "Parameter";
-                    txtBoxExpOut.Enabled = true;
-                    txtBoxExpOut.Focus();
-                    lblExpOut.Text += " (Press enter to continue)";
                 }
             }
         }
