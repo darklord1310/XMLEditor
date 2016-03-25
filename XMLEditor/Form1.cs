@@ -17,6 +17,7 @@ namespace XMLEditor
     public partial class Form1 : Form
     {
         int num = 0;
+        string filename = "V5S_Diag Command";
         string moduleName = string.Empty;
         string moduleID = string.Empty;
         string funcName = string.Empty;
@@ -27,7 +28,6 @@ namespace XMLEditor
         private const int MAPSIZE = 128;
         private StringBuilder NewNodeMap = new StringBuilder(MAPSIZE);
 
-
         Excel.Application xlApp = new Excel.Application();
         Excel.Workbook xlWorkbook;
         Excel._Worksheet xlWorksheet;
@@ -35,7 +35,7 @@ namespace XMLEditor
 
         string appPath, folderPath;
         ContextMenuStrip docMenu;
-        Progress_Bar pb;
+        enum Images { NODE, ADD, DELETE, EDIT };
 
         public class InvalidTestMenu : Exception
         {
@@ -56,8 +56,6 @@ namespace XMLEditor
         public Form1()
         {
             InitializeComponent();
-            ImageList TreeviewIL = new ImageList();
-            TreeviewIL.Images.Add(Image.FromFile("C:\\Users\\User\\Desktop\\XMLEditor\\resources\\node.png"));
             this.treeView1.ImageList = TreeviewIL;
             createTreeView();
         }
@@ -200,7 +198,7 @@ namespace XMLEditor
                 {
                     treeView1.SelectedNode = treeView1.GetNodeAt(e.X, e.Y);         // get the tree node on mouse right click
                     treeView1.SelectedNode.BackColor = SystemColors.HighlightText;      // highlight the selected node
-                    Point p = new Point(treeView1.SelectedNode.Bounds.Right + 15, treeView1.SelectedNode.Bounds.Bottom + 25);
+                    Point p = new Point(treeView1.SelectedNode.Bounds.Right + 16, treeView1.SelectedNode.Bounds.Bottom + 26);
                     createContextMenuStrip(treeView1.SelectedNode.Level);
                     docMenu.Show(PointToScreen(p));
                 }
@@ -220,21 +218,22 @@ namespace XMLEditor
             }
             else
             {
-                if(File.Exists(Path.Combine(folderPath, "V5S_Diag-Command.xls")) )
+                if(File.Exists(Path.Combine(folderPath, filename + ".xls")) )
                 {
-                    xlWorkbook = xlApp.Workbooks.Open(Path.Combine(folderPath, "V5S_Diag-Command"));
+                    xlWorkbook = xlApp.Workbooks.Open(Path.Combine(folderPath, filename));
                     Progress_Bar f = new Progress_Bar();
                     f.StartPosition = FormStartPosition.Manual;
                     f.Location = new Point(Location.X + (Width - f.Width) / 2, Location.Y + (Height - f.Height) / 2);
                     f.Show(this);         //Make sure we're the owner
                     this.Enabled = false; //Disable ourselves
                     extractDataFromExcel();
+                    xlApp.Workbooks.Close();
                     this.Enabled = true;  //We're done, enable ourselves
                     f.Close();            //Dispose message form
                 }
                 else
                 {
-                    MessageBox.Show("CSV file with name V5S_Diag-Command not found!");
+                    MessageBox.Show("CSV file with name " + filename + " not found.");
                 }
             }
         }
@@ -247,10 +246,13 @@ namespace XMLEditor
             //Create some menu items.
             ToolStripMenuItem deleteLabel = new ToolStripMenuItem();
             deleteLabel.Text = "Delete";
+            deleteLabel.Image = TreeviewIL.Images[(int)Images.DELETE];
             ToolStripMenuItem renameLabel = new ToolStripMenuItem();
             renameLabel.Text = "Edit";
+            renameLabel.Image = TreeviewIL.Images[(int)Images.EDIT];
             ToolStripMenuItem addLabel = new ToolStripMenuItem();
             addLabel.Text = "Add";
+            addLabel.Image = TreeviewIL.Images[(int)Images.ADD];
 
             //Add the menu items to the menu.
             if (nodeLevel == 4) //Sequence Number
@@ -420,6 +422,7 @@ namespace XMLEditor
                 xlWorkbook = xlApp.Workbooks.Open(dialog.FileName);
                 this.Cursor = Cursors.WaitCursor;
                 extractDataFromExcel();
+                xlApp.Workbooks.Close();
                 this.Cursor = Cursors.Default;
             }
         }
@@ -447,12 +450,13 @@ namespace XMLEditor
                 if(DestinationNode != null)
                 {
                     if (NewNode.Level == DestinationNode.Level)
+                    {
                         handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
-
-                    if (NewNode.Parent.Level == 2 || NewNode.Parent.Level == 3)
-                        renumberAllNodes(NewNode.Parent);
-                    
+                        if (NewNode.Parent.Level == 2 || NewNode.Parent.Level == 3)
+                            renumberAllNodes(NewNode.Parent);
+                    } 
                 }
+                DestinationNode.BackColor = Color.White;
             }
             this.Refresh();
         }
@@ -572,42 +576,23 @@ namespace XMLEditor
         }
          * */
 
-        /*
-        private void yourTreeView_DragOver(object sender, DragEventArgs e)
-        {
-        Point p = treeView1.PointToClient(new Point(e.X, e.Y));
-        TreeNode node = treeView1.GetNodeAt(p.X, p.Y);
-        if (node.PrevVisibleNode != null)
-        {
-            node.PrevVisibleNode.BackColor = Color.White;
-        }
-        if (node.NextVisibleNode != null)
-        {
-            node.NextVisibleNode.BackColor = Color.White;
-        }
-        node.BackColor = Color.Aquamarine;
-
-            /*
-            TreeView tv = sender as TreeView;
-            // Retrieve the client coordinates of the mouse position.
-            Point targetPoint = tv.PointToClient(new Point(e.X, e.Y));
-            // Select the node at the mouse position.
-            TreeNode tn = tv.GetNodeAt(targetPoint);
-            if (!tn.Equals(tv.SelectedNode))
-            {
-                //clear previous selected node font to original
-                tv.SelectedNode.NodeFont = new Font(tv.Font, FontStyle.Regular);
-                tv.SelectedNode = tn;
-                tv.SelectedNode.NodeFont = new Font(tv.Font, FontStyle.Underline | FontStyle.Italic | FontStyle.Bold);
-            }
-            
-        }
-        */
-
         private void treeView1_DragOver(object sender, System.Windows.Forms.DragEventArgs e)
         {
             TreeNode NodeOver = this.treeView1.GetNodeAt(this.treeView1.PointToClient(Cursor.Position));
             TreeNode NodeMoving = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
+
+            if(NodeOver != null)
+            {
+                if (NodeOver.PrevVisibleNode != null)
+                {
+                    NodeOver.PrevVisibleNode.BackColor = Color.White;
+                }
+                if (NodeOver.NextVisibleNode != null)
+                {
+                    NodeOver.NextVisibleNode.BackColor = Color.White;
+                }
+                NodeOver.BackColor = Color.Aquamarine;
+            }
 
 
             // A bit long, but to summarize, process the following code only if the nodeover is null
@@ -616,7 +601,7 @@ namespace XMLEditor
             if (NodeOver != null && (NodeOver != NodeMoving || (NodeOver.Parent != null && NodeOver.Index == (NodeOver.Parent.Nodes.Count - 1))))
             {
                 int OffsetY = this.treeView1.PointToClient(Cursor.Position).Y - NodeOver.Bounds.Top;
-                int NodeOverImageWidth = this.treeView1.ImageList.Images[0].Size.Width + 8;
+                int NodeOverImageWidth = this.treeView1.ImageList.Images[(int)Images.NODE].Size.Width + 8;
                 Graphics g = this.treeView1.CreateGraphics();
 
                 if (OffsetY < (NodeOver.Bounds.Height / 2))
@@ -700,7 +685,7 @@ namespace XMLEditor
         {
             Graphics g = this.treeView1.CreateGraphics();
 
-            int NodeOverImageWidth = this.treeView1.ImageList.Images[0].Size.Width + 8;
+            int NodeOverImageWidth = this.treeView1.ImageList.Images[(int)Images.NODE].Size.Width + 8;
             int LeftPos = NodeOver.Bounds.Left - NodeOverImageWidth;
             int RightPos = this.treeView1.Width - 4;
 
@@ -729,7 +714,7 @@ namespace XMLEditor
         {
             Graphics g = this.treeView1.CreateGraphics();
 
-            int NodeOverImageWidth = this.treeView1.ImageList.Images[0].Size.Width + 8;
+            int NodeOverImageWidth = this.treeView1.ImageList.Images[(int)Images.NODE].Size.Width + 8;
             // Once again, we are not dragging to node over, draw the placeholder using the ParentDragDrop bounds
             int LeftPos, RightPos;
             if (ParentDragDrop != null)
@@ -792,9 +777,7 @@ namespace XMLEditor
                 this.NodeMap = this.NewNodeMap.ToString();
                 return false;
             }
-        }//oem
-
-
+        }
     }
 
 }

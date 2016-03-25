@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.databaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -46,6 +48,7 @@
             this.txtBoxExpOut = new System.Windows.Forms.TextBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.treeView1 = new XMLEditor.DropDownTreeView();
+            this.TreeviewIL = new System.Windows.Forms.ImageList(this.components);
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -192,13 +195,20 @@
             this.treeView1.Name = "treeView1";
             this.treeView1.Size = new System.Drawing.Size(231, 316);
             this.treeView1.TabIndex = 3;
-            this.treeView1.ImageIndex = -1;
-            this.treeView1.SelectedImageIndex = -1;
             this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
             this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
             this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
             this.treeView1.DragOver += new System.Windows.Forms.DragEventHandler(this.treeView1_DragOver);
             this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
+            // 
+            // TreeviewIL
+            // 
+            this.TreeviewIL.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("TreeviewIL.ImageStream")));
+            this.TreeviewIL.TransparentColor = System.Drawing.Color.Transparent;
+            this.TreeviewIL.Images.SetKeyName(0, "node.png");
+            this.TreeviewIL.Images.SetKeyName(1, "add.png");
+            this.TreeviewIL.Images.SetKeyName(2, "delete.png");
+            this.TreeviewIL.Images.SetKeyName(3, "edit.png");
             // 
             // Form1
             // 
@@ -250,6 +260,7 @@
         private System.Windows.Forms.Label lblExpOut;
         private System.Windows.Forms.TextBox txtBoxExpOut;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.ImageList TreeviewIL;
     }
 }
 
