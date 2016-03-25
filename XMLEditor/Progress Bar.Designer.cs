@@ -56,7 +56,8 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(238, 13);
             this.label1.TabIndex = 1;
-            this.label1.Text = "V5S_Diag-Command detected in AppData folder.\r\n";
+            this.label1.Text = "V5S_Diag Command detected in AppData folder.\r\n";
+            this.label1.UseWaitCursor = true;
             // 
             // label2
             // 
@@ -67,6 +68,7 @@
             this.label2.Size = new System.Drawing.Size(128, 13);
             this.label2.TabIndex = 2;
             this.label2.Text = "Please wait while loading.";
+            this.label2.UseWaitCursor = true;
             // 
             // Progress_Bar
             // 

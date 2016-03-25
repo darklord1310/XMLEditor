@@ -21,7 +21,7 @@ namespace XMLEditor
         string funcName = string.Empty;
         string comboBoxSelectedItem = string.Empty;
         TestMenu[] tm = new TestMenu[7];
-        Category cat = new Category();
+        public Category cat = new Category();
 
         Excel.Application xlApp = new Excel.Application();
         Excel.Workbook xlWorkbook;
@@ -32,17 +32,9 @@ namespace XMLEditor
         ContextMenuStrip docMenu;
         Progress_Bar pb;
 
-        public class InvalidTestMenu : Exception
+        public class ShowErrorMessageException : Exception
         {
-            public InvalidTestMenu(string message)
-            {
-                MessageBox.Show(message);
-            }
-        }
-
-        public class NoExcelSelected : Exception
-        {
-            public NoExcelSelected(string message)
+            public ShowErrorMessageException(string message)
             {
                 MessageBox.Show(message);
             }
@@ -83,7 +75,7 @@ namespace XMLEditor
             try
             {
                 if (xlWorkbook == null)
-                    throw new NoExcelSelected("No Excel selected!");
+                    throw new ShowErrorMessageException("No Excel selected!");
            
                 string nodeName = string.Empty;
                 string[] strArr = getStringArray(node);
@@ -102,8 +94,12 @@ namespace XMLEditor
                     TreeNode dNode = null;
                     if (node.Level == 2)
                     {
+                        cat.setCategory(node.Parent.Text);
+                        cat.setModule(node.Text);
                         dNode = createNormalTreeNode("TC_" + (node.Nodes.Count + 1).ToString("D4"));
                         txtBoxTcDesc.Enabled = true;
+                        txtBoxTcDesc.Text = string.Empty;
+                        txtBoxTcDesc.Focus();
                         lblTcDesc.Text += " (Press enter to continue)";
                         treeView1.Enabled = false;
                         cat.tc.Add(new TestCase());
@@ -113,6 +109,10 @@ namespace XMLEditor
                     {
                         dNode = createNormalTreeNode("SN_" + (node.Nodes.Count + 1).ToString("D4"));
                         txtBoxSqDesc.Enabled = true;
+                        txtBoxSqDesc.Focus();
+                        txtBoxSqDesc.Text = string.Empty;
+                        txtBoxPara.Text = string.Empty;
+                        txtBoxExpOut.Text = string.Empty;
                         lblSqDesc.Text += " (Press enter to continue)";
                         treeView1.Enabled = false;
                         cat.tc[node.Index].seqNo.Add(new SqNum());
@@ -136,24 +136,32 @@ namespace XMLEditor
                         MessageBox.Show("No module available for " + node.Text + "!");
                 }
             }
-            catch (NoExcelSelected ex) { }
+            catch (ShowErrorMessageException ex) { }
         }
 
         private void updateDiagCmd(TreeNode node)
         {
-            int num = getTestMenuNum(node.Parent.Parent.Text);
-            txtBoxCat.Text = tm[num].getCategoryID().ToString();
-            string[] modules = tm[num].getModuleName().Split('|');
-            string[] moduleID = tm[num].getModuleID().Split('|');
-            int index = getModuleId(modules, node.Parent.Text);
-            txtBoxMod.Text = moduleID[index];
-            string[] funcNames = tm[num].getFuncName().Split('|');
-            string[] cFuncNames = funcNames[index].Split(',');
-
-            for (int i = 0; i < cFuncNames.Count(); i++ )
+            try
             {
-                cBoxFunc.Items.Add(cFuncNames[i]);
+                int num = getTestMenuNum(node.Parent.Parent.Text);
+                txtBoxCat.Text = tm[num].getCategoryID().ToString();
+                string[] modules = tm[num].getModuleName().Split('|');
+                string[] moduleID = tm[num].getModuleID().Split('|');
+                int index = getModuleId(modules, node.Parent.Text);
+                if (index != 99)
+                    txtBoxMod.Text = moduleID[index];
+                else
+                    throw new ShowErrorMessageException("Module not available in class!");
+                string[] funcNames = tm[num].getFuncName().Split('|');
+                string[] cFuncNames = funcNames[index].Split(',');
+                cBoxFunc.Items.Clear();
+
+                for (int i = 0; i < cFuncNames.Count(); i++)
+                {
+                    cBoxFunc.Items.Add(cFuncNames[i]);
+                }
             }
+            catch (ShowErrorMessageException ex) { }
         }
 
         private int getModuleId(string[] modules, string module)
@@ -169,11 +177,26 @@ namespace XMLEditor
             return 99;
         }
 
+        //private void clearAllTextbox()
+        //{
+        //    txtBoxTcDesc.Text = string.Empty;
+        //    txtBoxSqDesc.Text = string.Empty;
+        //    txtBoxCat.Text = string.Empty;
+        //    txtBoxMod.Text = string.Empty;
+        //    txtBoxPara.Text = string.Empty;
+        //    txtBoxExpOut.Text = string.Empty;
+        //}
+
         private void deleteNode(TreeNode node)
         {
             TreeNode parent = node.Parent;
             int index = node.Index;
             node.Remove();
+
+            if (index == 3)
+                cat.tc.RemoveAt(node.Index);
+            else if (index == 4)
+                cat.tc[node.Parent.Index].seqNo.RemoveAt(node.Index);
 
             for (int i = index; i < parent.Nodes.Count; i++)
             {
@@ -209,16 +232,36 @@ namespace XMLEditor
             {
                 treeView1.BeginUpdate();
 
-                if(treeView1.SelectedNode.Nodes.Count > 0)
+                if (treeView1.SelectedNode.Level < 3)
                 {
-                    if (MessageBox.Show("Are you sure?\nAll child nodes will be remove", "Confirmation",
-                                         MessageBoxButtons.YesNo,
-                                         MessageBoxIcon.Question) == DialogResult.Yes)
+                    if (treeView1.SelectedNode.Nodes.Count > 0)
                     {
-                        removeAllChildNode(treeView1.SelectedNode);
+                        if (MessageBox.Show("Are you sure?\nAll child nodes will be remove", "Confirmation",
+                                             MessageBoxButtons.YesNo,
+                                             MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            removeAllChildNode(treeView1.SelectedNode);
+                        }
+                    }
+                    treeView1.ExpandNodeComboBox(treeView1.SelectedNode);
+                }
+                else
+                {
+                    treeView1.Enabled = false;
+
+                    if (treeView1.SelectedNode.Level == 3)
+                    {
+                        txtBoxTcDesc.Enabled = true;
+                        txtBoxTcDesc.Focus();
+                        lblTcDesc.Text += " (Press enter to continue)";
+                    }
+                    else
+                    {
+                        txtBoxSqDesc.Enabled = true;
+                        txtBoxSqDesc.Focus();
+                        lblSqDesc.Text += " (Press enter to continue)";
                     }
                 }
-                treeView1.ExpandNodeComboBox(treeView1.SelectedNode);
 
                 treeView1.EndUpdate();
             }
@@ -270,12 +313,13 @@ namespace XMLEditor
                     f.Show(this);         //Make sure we're the owner
                     this.Enabled = false; //Disable ourselves
                     extractDataFromExcel();
+                    xlWorkbook.Close();
                     this.Enabled = true;  //We're done, enable ourselves
                     f.Close();            //Dispose message form
                 }
                 else
                 {
-                    MessageBox.Show("Excel file with name V5S_Diag Command not found!");
+                    MessageBox.Show("Excel file with name 'V5S_Diag Command' not found!");
                 }
             }
         }
@@ -295,15 +339,13 @@ namespace XMLEditor
 
             //Add the menu items to the menu.
             if (nodeLevel == 4) //Sequence Number
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { deleteLabel });
+                docMenu.Items.AddRange(new ToolStripMenuItem[] { renameLabel, deleteLabel });
             else if (nodeLevel == 0 && treeView1.Nodes["TestMenu"].Nodes.Count > 0)
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { });
             else if (nodeLevel == 1 && treeView1.Nodes["TestMenu"].Nodes[0].Nodes.Count > 0)
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { renameLabel, deleteLabel });
             else if (nodeLevel == 0)    //Test Menu
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel });
-            else if (nodeLevel == 3)    //Test Case
-                docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, deleteLabel });
             else
                 docMenu.Items.AddRange(new ToolStripMenuItem[] { addLabel, renameLabel, deleteLabel });
 
@@ -343,8 +385,8 @@ namespace XMLEditor
                     }
                 }
             }
-            
-            catch (InvalidTestMenu ex) { }
+
+            catch (ShowErrorMessageException ex) { }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
 
             //MessageBox.Show(tm[1].getModuleName());
@@ -368,7 +410,7 @@ namespace XMLEditor
                 string categoryName = xlRange.Cells[row, 1].Value2.Substring(0, xlRange.Cells[row, 1].Value2.IndexOf('-') - 1);
                 num = getTestMenuNum(categoryName);
                 if (num == 99)
-                    throw new InvalidTestMenu("Invalid Category!");
+                    throw new ShowErrorMessageException("Invalid Category!");
                 moduleName += xlRange.Cells[row, 1].Value2.Substring(xlRange.Cells[row, 1].Value2.LastIndexOf('-') + 2) + "|";
                 moduleID += xlRange.Cells[row, 2].Value2 + "|";
 
@@ -461,6 +503,7 @@ namespace XMLEditor
                 xlWorkbook = xlApp.Workbooks.Open(dialog.FileName);
                 this.Cursor = Cursors.WaitCursor;
                 extractDataFromExcel();
+                xlWorkbook.Close();
                 this.Cursor = Cursors.Default;
             }
         }
@@ -615,10 +658,14 @@ namespace XMLEditor
                 }
                 else
                 {
-                    cat.tc[treeView1.SelectedNode.Nodes.Count - 1].setDesc(txtBoxTcDesc.Text);
+                    if(treeView1.SelectedNode.Level == 2)
+                        cat.tc[treeView1.SelectedNode.Nodes.Count - 1].setDesc(txtBoxTcDesc.Text);
+                    else
+                        cat.tc[treeView1.SelectedNode.Index].setDesc(txtBoxTcDesc.Text);
                     treeView1.Enabled = true;
                     txtBoxTcDesc.Enabled = false;
                     lblTcDesc.Text = "Test Case Description";
+                    displayTestCaseClass();
                 }
             }
         }
@@ -634,7 +681,10 @@ namespace XMLEditor
                 }
                 else
                 {
-                    cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setDesc(txtBoxSqDesc.Text);
+                    if (treeView1.SelectedNode.Level == 3)
+                        cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setDesc(txtBoxSqDesc.Text);
+                    else
+                        cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setDesc(txtBoxSqDesc.Text);
                     txtBoxSqDesc.Enabled = false;
                     lblSqDesc.Text = "Seq No Description";
                     cBoxFunc.Enabled = true;
@@ -654,10 +704,14 @@ namespace XMLEditor
                 }
                 else
                 {
-                    cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setPara(txtBoxPara.Text);
+                    if (treeView1.SelectedNode.Level == 3)
+                        cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setPara(txtBoxPara.Text);
+                    else
+                        cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setPara(txtBoxPara.Text);
                     txtBoxPara.Enabled = false;
                     lblPara.Text = "Parameter";
                     txtBoxExpOut.Enabled = true;
+                    txtBoxExpOut.Focus();
                     lblExpOut.Text += " (Press enter to continue)";
                 }
             }
@@ -674,12 +728,16 @@ namespace XMLEditor
                 }
                 else
                 {
-                    cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setExpected(txtBoxExpOut.Text);
+                    if (treeView1.SelectedNode.Level == 3)
+                        cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setExpected(txtBoxExpOut.Text);
+                    else
+                        cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setExpected(txtBoxExpOut.Text);
                     txtBoxExpOut.Enabled = false;
                     lblExpOut.Text = "Expected Outcome";
                     txtBoxExpOut.Enabled = false;
                     cBoxFunc.Enabled = false;
                     treeView1.Enabled = true;
+                    displaySeqNumClass();
                 }
             }
         }
@@ -688,8 +746,12 @@ namespace XMLEditor
         {
             if(!string.Equals(comboBoxSelectedItem, cBoxFunc.SelectedItem.ToString()))
             {
-                cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setDiagCmd(txtBoxCat.Text + txtBoxMod.Text + cBoxFunc.SelectedItem.ToString());
+                if (treeView1.SelectedNode.Level == 3)
+                    cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setDiagCmd(txtBoxCat.Text + txtBoxMod.Text + cBoxFunc.SelectedItem.ToString());
+                else
+                    cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setDiagCmd(txtBoxCat.Text + txtBoxMod.Text + cBoxFunc.SelectedItem.ToString());
                 txtBoxPara.Enabled = true;
+                txtBoxPara.Focus();
                 txtBoxExpOut.Enabled = false;
                 txtBoxPara.Text = string.Empty;
                 txtBoxExpOut.Text = string.Empty;
@@ -704,8 +766,35 @@ namespace XMLEditor
             if(cBoxFunc.SelectedItem != null)
                 comboBoxSelectedItem = cBoxFunc.SelectedItem.ToString();
         }
-    }
 
+        private void displayTestCaseClass()
+        {
+            if (treeView1.SelectedNode.Level == 2)
+                MessageBox.Show(cat.tc[treeView1.SelectedNode.Nodes.Count - 1].getDesc());
+            else
+                MessageBox.Show(cat.tc[treeView1.SelectedNode.Index].getDesc());
+        }
+
+        private void displaySeqNumClass()
+        {
+            if (treeView1.SelectedNode.Level == 3)
+            {
+                MessageBox.Show(cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].getSeqNo() + "\n" +
+                                cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].getDesc() + "\n" +
+                                cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].getDiagCmd() + "\n" +
+                                cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].getPara() + "\n" +
+                                cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].getExpected() + "\n");
+            }
+            else
+            {
+                MessageBox.Show(cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].getSeqNo() + "\n" +
+                                cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].getDesc() + "\n" +
+                                cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].getDiagCmd() + "\n" +
+                                cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].getPara() + "\n" +
+                                cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].getExpected() + "\n");
+            }
+        }
+    }
 }
 
 
