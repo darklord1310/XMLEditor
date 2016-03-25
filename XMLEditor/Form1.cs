@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using System.Data.SQLite;
 using System.IO;
+using System.Reflection;
 
 namespace XMLEditor
 {
@@ -21,6 +22,11 @@ namespace XMLEditor
         string funcName = string.Empty;
         TestMenu[] tm = new TestMenu[7];
         Category cat = new Category();
+
+        private string NodeMap;
+        private const int MAPSIZE = 128;
+        private StringBuilder NewNodeMap = new StringBuilder(MAPSIZE);
+
 
         Excel.Application xlApp = new Excel.Application();
         Excel.Workbook xlWorkbook;
@@ -50,6 +56,9 @@ namespace XMLEditor
         public Form1()
         {
             InitializeComponent();
+            ImageList TreeviewIL = new ImageList();
+            TreeviewIL.Images.Add(Image.FromFile("C:\\Users\\User\\Desktop\\XMLEditor\\resources\\node.png"));
+            this.treeView1.ImageList = TreeviewIL;
             createTreeView();
         }
 
@@ -440,10 +449,12 @@ namespace XMLEditor
                     if (NewNode.Level == DestinationNode.Level)
                         handleNodeMoving(DestinationNode.Parent, NewNode.Index, DestinationNode.Index);
 
-                    if(NewNode.Parent.Level == 2 || NewNode.Parent.Level == 3)
+                    if (NewNode.Parent.Level == 2 || NewNode.Parent.Level == 3)
                         renumberAllNodes(NewNode.Parent);
+                    
                 }
             }
+            this.Refresh();
         }
 
         private void renumberAllNodes(TreeNode parent)
@@ -560,6 +571,230 @@ namespace XMLEditor
             this.Deactivate += TestServerGUI_Deactivate;
         }
          * */
+
+        /*
+        private void yourTreeView_DragOver(object sender, DragEventArgs e)
+        {
+        Point p = treeView1.PointToClient(new Point(e.X, e.Y));
+        TreeNode node = treeView1.GetNodeAt(p.X, p.Y);
+        if (node.PrevVisibleNode != null)
+        {
+            node.PrevVisibleNode.BackColor = Color.White;
+        }
+        if (node.NextVisibleNode != null)
+        {
+            node.NextVisibleNode.BackColor = Color.White;
+        }
+        node.BackColor = Color.Aquamarine;
+
+            /*
+            TreeView tv = sender as TreeView;
+            // Retrieve the client coordinates of the mouse position.
+            Point targetPoint = tv.PointToClient(new Point(e.X, e.Y));
+            // Select the node at the mouse position.
+            TreeNode tn = tv.GetNodeAt(targetPoint);
+            if (!tn.Equals(tv.SelectedNode))
+            {
+                //clear previous selected node font to original
+                tv.SelectedNode.NodeFont = new Font(tv.Font, FontStyle.Regular);
+                tv.SelectedNode = tn;
+                tv.SelectedNode.NodeFont = new Font(tv.Font, FontStyle.Underline | FontStyle.Italic | FontStyle.Bold);
+            }
+            
+        }
+        */
+
+        private void treeView1_DragOver(object sender, System.Windows.Forms.DragEventArgs e)
+        {
+            TreeNode NodeOver = this.treeView1.GetNodeAt(this.treeView1.PointToClient(Cursor.Position));
+            TreeNode NodeMoving = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
+
+
+            // A bit long, but to summarize, process the following code only if the nodeover is null
+            // and either the nodeover is not the same thing as nodemoving UNLESSS nodeover happens
+            // to be the last node in the branch (so we can allow drag & drop below a parent branch)
+            if (NodeOver != null && (NodeOver != NodeMoving || (NodeOver.Parent != null && NodeOver.Index == (NodeOver.Parent.Nodes.Count - 1))))
+            {
+                int OffsetY = this.treeView1.PointToClient(Cursor.Position).Y - NodeOver.Bounds.Top;
+                int NodeOverImageWidth = this.treeView1.ImageList.Images[0].Size.Width + 8;
+                Graphics g = this.treeView1.CreateGraphics();
+
+                if (OffsetY < (NodeOver.Bounds.Height / 2))
+                {
+                    #region If NodeOver is a child then cancel
+                    TreeNode tnParadox = NodeOver;
+                    while (tnParadox.Parent != null)
+                    {
+                        if (tnParadox.Parent == NodeMoving)
+                        {
+                            this.NodeMap = "";
+                            return;
+                        }
+
+                        tnParadox = tnParadox.Parent;
+                    }
+                    #endregion
+                    #region Store the placeholder info into a pipe delimited string
+                    SetNewNodeMap(NodeOver, false);
+                    if (SetMapsEqual() == true)
+                        return;
+                    #endregion
+                    #region Clear placeholders above and below
+                    this.Refresh();
+                    #endregion
+                    #region Draw the placeholders
+                    this.DrawLeafTopPlaceholders(NodeOver);
+                    #endregion
+                }
+                else
+                {
+                    #region If NodeOver is a child then cancel
+                    TreeNode tnParadox = NodeOver;
+                    while (tnParadox.Parent != null)
+                    {
+                        if (tnParadox.Parent == NodeMoving)
+                        {
+                            this.NodeMap = "";
+                            return;
+                        }
+
+                        tnParadox = tnParadox.Parent;
+                    }
+                    #endregion
+                    #region Allow drag drop to parent branches
+                    TreeNode ParentDragDrop = null;
+                    // If the node the mouse is over is the last node of the branch we should allow
+                    // the ability to drop the "nodemoving" node BELOW the parent node
+                    if (NodeOver.Parent != null && NodeOver.Index == (NodeOver.Parent.Nodes.Count - 1))
+                    {
+                        int XPos = this.treeView1.PointToClient(Cursor.Position).X;
+                        if (XPos < NodeOver.Bounds.Left)
+                        {
+                            ParentDragDrop = NodeOver.Parent;
+
+                            if (XPos < (ParentDragDrop.Bounds.Left - this.treeView1.ImageList.Images[ParentDragDrop.ImageIndex].Size.Width))
+                            {
+                                if (ParentDragDrop.Parent != null)
+                                    ParentDragDrop = ParentDragDrop.Parent;
+                            }
+                        }
+                    }
+                    #endregion
+                    #region Store the placeholder info into a pipe delimited string
+                    // Since we are in a special case here, use the ParentDragDrop node as the current "nodeover"
+                    SetNewNodeMap(ParentDragDrop != null ? ParentDragDrop : NodeOver, true);
+                    if (SetMapsEqual() == true)
+                        return;
+                    #endregion
+                    #region Clear placeholders above and below
+                    this.Refresh();
+                    #endregion
+                    #region Draw the placeholders
+                    DrawLeafBottomPlaceholders(NodeOver, ParentDragDrop);
+                    #endregion
+                }
+            }
+        }
+
+        private void DrawLeafTopPlaceholders(TreeNode NodeOver)
+        {
+            Graphics g = this.treeView1.CreateGraphics();
+
+            int NodeOverImageWidth = this.treeView1.ImageList.Images[0].Size.Width + 8;
+            int LeftPos = NodeOver.Bounds.Left - NodeOverImageWidth;
+            int RightPos = this.treeView1.Width - 4;
+
+            Point[] LeftTriangle = new Point[5]{
+												   new Point(LeftPos, NodeOver.Bounds.Top - 4),
+												   new Point(LeftPos, NodeOver.Bounds.Top + 4),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Y),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Top - 1),
+												   new Point(LeftPos, NodeOver.Bounds.Top - 5)};
+
+            Point[] RightTriangle = new Point[5]{
+													new Point(RightPos, NodeOver.Bounds.Top - 4),
+													new Point(RightPos, NodeOver.Bounds.Top + 4),
+													new Point(RightPos - 4, NodeOver.Bounds.Y),
+													new Point(RightPos - 4, NodeOver.Bounds.Top - 1),
+													new Point(RightPos, NodeOver.Bounds.Top - 5)};
+
+
+            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
+            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
+            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Top), new Point(RightPos, NodeOver.Bounds.Top));
+
+        }//eom
+
+        private void DrawLeafBottomPlaceholders(TreeNode NodeOver, TreeNode ParentDragDrop)
+        {
+            Graphics g = this.treeView1.CreateGraphics();
+
+            int NodeOverImageWidth = this.treeView1.ImageList.Images[0].Size.Width + 8;
+            // Once again, we are not dragging to node over, draw the placeholder using the ParentDragDrop bounds
+            int LeftPos, RightPos;
+            if (ParentDragDrop != null)
+                LeftPos = ParentDragDrop.Bounds.Left - (this.treeView1.ImageList.Images[ParentDragDrop.ImageIndex].Size.Width + 8);
+            else
+                LeftPos = NodeOver.Bounds.Left - NodeOverImageWidth;
+            RightPos = this.treeView1.Width - 4;
+
+            Point[] LeftTriangle = new Point[5]{
+												   new Point(LeftPos, NodeOver.Bounds.Bottom - 4),
+												   new Point(LeftPos, NodeOver.Bounds.Bottom + 4),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Bottom),
+												   new Point(LeftPos + 4, NodeOver.Bounds.Bottom - 1),
+												   new Point(LeftPos, NodeOver.Bounds.Bottom - 5)};
+
+            Point[] RightTriangle = new Point[5]{
+													new Point(RightPos, NodeOver.Bounds.Bottom - 4),
+													new Point(RightPos, NodeOver.Bounds.Bottom + 4),
+													new Point(RightPos - 4, NodeOver.Bounds.Bottom),
+													new Point(RightPos - 4, NodeOver.Bounds.Bottom - 1),
+													new Point(RightPos, NodeOver.Bounds.Bottom - 5)};
+
+
+            g.FillPolygon(System.Drawing.Brushes.Black, LeftTriangle);
+            g.FillPolygon(System.Drawing.Brushes.Black, RightTriangle);
+            g.DrawLine(new System.Drawing.Pen(Color.Black, 2), new Point(LeftPos, NodeOver.Bounds.Bottom), new Point(RightPos, NodeOver.Bounds.Bottom));
+        }//eom
+
+        private void SetNewNodeMap(TreeNode tnNode, bool boolBelowNode)
+        {
+            NewNodeMap.Length = 0;
+
+            if (boolBelowNode)
+                NewNodeMap.Insert(0, (int)tnNode.Index + 1);
+            else
+                NewNodeMap.Insert(0, (int)tnNode.Index);
+            TreeNode tnCurNode = tnNode;
+
+            while (tnCurNode.Parent != null)
+            {
+                tnCurNode = tnCurNode.Parent;
+
+                if (NewNodeMap.Length == 0 && boolBelowNode == true)
+                {
+                    NewNodeMap.Insert(0, (tnCurNode.Index + 1) + "|");
+                }
+                else
+                {
+                    NewNodeMap.Insert(0, tnCurNode.Index + "|");
+                }
+            }
+        }//oem
+
+        private bool SetMapsEqual()
+        {
+            if (this.NewNodeMap.ToString() == this.NodeMap)
+                return true;
+            else
+            {
+                this.NodeMap = this.NewNodeMap.ToString();
+                return false;
+            }
+        }//oem
+
+
     }
 
 }
