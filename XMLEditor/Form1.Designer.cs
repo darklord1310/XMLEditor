@@ -46,7 +46,7 @@
             this.txtBoxPara = new System.Windows.Forms.TextBox();
             this.lblExpOut = new System.Windows.Forms.Label();
             this.txtBoxExpOut = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.createXML = new System.Windows.Forms.Button();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.treeView1 = new XMLEditor.DropDownTreeView();
             this.TreeviewIL = new System.Windows.Forms.ImageList(this.components);
@@ -195,17 +195,15 @@
             this.txtBoxExpOut.TabIndex = 15;
             this.txtBoxExpOut.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxExpOut_KeyDown);
             // 
-            // treeView1
+            // createXML
             // 
-            this.treeView1.BackColor = System.Drawing.SystemColors.Control;
-            this.treeView1.Location = new System.Drawing.Point(13, 42);
-            this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(231, 316);
-            this.treeView1.TabIndex = 3;
-            this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
-            this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
-            this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
-            this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
+            this.createXML.Location = new System.Drawing.Point(322, 365);
+            this.createXML.Name = "createXML";
+            this.createXML.Size = new System.Drawing.Size(113, 23);
+            this.createXML.TabIndex = 16;
+            this.createXML.Text = "Create XML";
+            this.createXML.UseVisualStyleBackColor = true;
+            this.createXML.Click += new System.EventHandler(this.createXML_Click);
             // 
             // backgroundWorker1
             // 
@@ -234,22 +232,12 @@
             this.TreeviewIL.Images.SetKeyName(2, "delete.png");
             this.TreeviewIL.Images.SetKeyName(3, "edit.png");
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(322, 365);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(113, 23);
-            this.button1.TabIndex = 16;
-            this.button1.Text = "Create XML";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(507, 402);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.createXML);
             this.Controls.Add(this.txtBoxExpOut);
             this.Controls.Add(this.lblExpOut);
             this.Controls.Add(this.txtBoxPara);
@@ -296,7 +284,7 @@
         private System.Windows.Forms.TextBox txtBoxPara;
         private System.Windows.Forms.Label lblExpOut;
         private System.Windows.Forms.TextBox txtBoxExpOut;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button createXML;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.ImageList TreeviewIL;
     }

@@ -52,19 +52,28 @@ namespace XMLEditor
             return seqNo;
         }
 
-        public void writeToXML(string category, string module, List<TestCase> tc)
+        public int writeToXML(string category, string module, List<TestCase> tc, string filename)
         {
-            XElement root = new XElement("TestMenu");
-            XElement categoryName = new XElement("Category", category);
-            XElement moduleName = new XElement("Module", module);
+            try
+            {
+                XElement root = new XElement("TestMenu");
+                XElement categoryName = new XElement("Category", category);
+                XElement moduleName = new XElement("Module", module);
 
-            //add from root
-            root.Add(categoryName);
-            root.Add(moduleName);
-            root.Add(writeTestCase(tc) );
+                //add from root
+                root.Add(categoryName);
+                root.Add(moduleName);
+                root.Add(writeTestCase(tc));
 
-            // save changes
-            root.Save(@categoryName + "_" + moduleName + ".xml");
+                // save changes
+                root.Save(filename);
+                return 1;
+            }
+            catch(Exception)
+            {
+                return 0;
+            }
+
         }
     }
 }
