@@ -17,6 +17,7 @@ namespace XMLEditor
     public partial class Form1 : Form
     {
         int num = 0;
+        int tvMode;
         string filename = "V5S_Diag Command";
         string moduleName = string.Empty;
         string moduleID = string.Empty;
@@ -37,6 +38,7 @@ namespace XMLEditor
         string appPath, folderPath, xmlPath;
         ContextMenuStrip docMenu;
         enum Images { NODE, ADD, DELETE, EDIT };
+        enum Mode { EDIT, ADD, DELETE };
 
         public class ShowErrorMessageException : Exception
         {
@@ -157,11 +159,11 @@ namespace XMLEditor
         {
             try
             {
-                int num = getTestMenuNum(node.Parent.Parent.Text);
+                int num = getTestMenuNum(getCatergoryName(node));
                 txtBoxCat.Text = tm[num].getCategoryID().ToString();
                 string[] modules = tm[num].getModuleName().Split('|');
                 string[] moduleID = tm[num].getModuleID().Split('|');
-                int index = getModuleId(modules, node.Parent.Text);
+                int index = getModuleId(modules, getModuleName(node));
                 if (index != 99)
                     txtBoxMod.Text = moduleID[index];
                 else
@@ -174,8 +176,30 @@ namespace XMLEditor
                 {
                     cBoxFunc.Items.Add(cFuncNames[i]);
                 }
+
+                cBoxFunc.Enabled = false;
             }
             catch (ShowErrorMessageException ex) { }
+        }
+
+        private string getCatergoryName(TreeNode node)
+        {
+            if (node.Level == 3)
+                return node.Parent.Parent.Text;
+            else if (node.Level == 4)
+                return node.Parent.Parent.Parent.Text;
+            else
+                return null;
+        }
+
+        private string getModuleName(TreeNode node)
+        {
+            if (node.Level == 3)
+                return node.Parent.Text;
+            else if (node.Level == 4)
+                return node.Parent.Parent.Text;
+            else
+                return null;
         }
 
         private int getModuleId(string[] modules, string module)
@@ -247,6 +271,7 @@ namespace XMLEditor
 
             if (item.ToString() == "Edit")
             {
+                tvMode = (int)Mode.EDIT;
                 treeView1.BeginUpdate();
 
                 if (treeView1.SelectedNode.Level < 3)
@@ -276,6 +301,7 @@ namespace XMLEditor
                     {
                         txtBoxSqDesc.ReadOnly = false;
                         txtBoxSqDesc.Focus();
+                        updateDiagCmd(treeView1.SelectedNode);
                         lblSqDesc.Text += " (Press enter to continue)";
                     }
                 }
@@ -284,10 +310,12 @@ namespace XMLEditor
             }
             else if (item.ToString() == "Add")
             {
+                tvMode = (int)Mode.ADD;
                 addNode(treeView1.SelectedNode);
             }
             else if (item.ToString() == "Delete")
             {
+                tvMode = (int)Mode.DELETE;
                 deleteNode(treeView1.SelectedNode);
             }
         }
@@ -491,6 +519,9 @@ namespace XMLEditor
             return 99;
         }
 
+        /*
+         * Get string array for  catergories and modules extract from excel
+         */
         private string[] getStringArray(TreeNode node)
         {
             string[] strArr = null;
@@ -838,30 +869,6 @@ namespace XMLEditor
             }
         }
 
-        private void txtBoxPara_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                if (string.IsNullOrEmpty(txtBoxPara.Text))
-                {
-                    MessageBox.Show("Please enter the parmeter!");
-                    txtBoxSqDesc.Text = string.Empty;
-                }
-                else
-                {
-                    if (treeView1.SelectedNode.Level == 3)
-                        cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setPara(txtBoxPara.Text);
-                    else
-                        cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setPara(txtBoxPara.Text);
-                    txtBoxPara.ReadOnly = true;
-                    lblPara.Text = "Parameter";
-                    txtBoxExpOut.ReadOnly = false;
-                    txtBoxExpOut.Focus();
-                    lblExpOut.Text += " (Press enter to continue)";
-                }
-            }
-        }
-
         private void DrawLeafTopPlaceholders(TreeNode NodeOver)
         {
             Graphics g = this.treeView1.CreateGraphics();
@@ -994,6 +1001,7 @@ namespace XMLEditor
                     treeView1.Enabled = true;
                     txtBoxTcDesc.ReadOnly = true;
                     lblTcDesc.Text = "Test Case Description";
+                    tvMode = -1;    //Not in any mode
                     //displayTestCaseClass();
                 }
             }
@@ -1022,6 +1030,30 @@ namespace XMLEditor
             }
         }
 
+        private void txtBoxPara_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (string.IsNullOrEmpty(txtBoxPara.Text))
+                {
+                    MessageBox.Show("Please enter the parmeter!");
+                    txtBoxSqDesc.Text = string.Empty;
+                }
+                else
+                {
+                    if (treeView1.SelectedNode.Level == 3)
+                        cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setPara(txtBoxPara.Text);
+                    else
+                        cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setPara(txtBoxPara.Text);
+                    txtBoxPara.ReadOnly = true;
+                    lblPara.Text = "Parameter";
+                    txtBoxExpOut.ReadOnly = false;
+                    txtBoxExpOut.Focus();
+                    lblExpOut.Text += " (Press enter to continue)";
+                }
+            }
+        }
+
         private void txtBoxExpOut_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -1042,6 +1074,7 @@ namespace XMLEditor
                     txtBoxExpOut.ReadOnly = true;
                     cBoxFunc.Enabled = false;
                     treeView1.Enabled = true;
+                    tvMode = -1;            //Not in any mode, finist edit or add node
                     //displaySeqNumClass();
                 }
             }
@@ -1055,8 +1088,8 @@ namespace XMLEditor
                     cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setDiagCmd(txtBoxCat.Text + txtBoxMod.Text + cBoxFunc.SelectedItem.ToString());
                 else
                     cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setDiagCmd(txtBoxCat.Text + txtBoxMod.Text + cBoxFunc.SelectedItem.ToString());
-
-                if (treeView1.SelectedNode.Level == 3)
+                
+                if (tvMode != -1)
                 {
                     txtBoxPara.ReadOnly = false;
                     txtBoxPara.Focus();
