@@ -23,7 +23,7 @@ namespace XMLEditor
         string funcName = string.Empty;
         string comboBoxSelectedItem = string.Empty;
         TestMenu[] tm = new TestMenu[7];
-        public Category cat = new Category();
+        Category cat = new Category();
 
         private string NodeMap;
         private const int MAPSIZE = 128;
@@ -576,8 +576,7 @@ namespace XMLEditor
                 integer++;
             }
         }
-
-
+       
         private void handleNodeMoving(TreeNode parent, int fromIndex, int toIndex)
         {
             int status = toIndex - fromIndex;
@@ -617,12 +616,18 @@ namespace XMLEditor
         private List<TreeNode> swapDown(List<TreeNode> nodes, int fromIndex, int toIndex)
         {
             TreeNode temp;
+            
             for (int i = fromIndex; i < toIndex; i++)
             {
                 temp = nodes[i + 1];
                 nodes[i + 1] = nodes[i];
                 nodes[i] = temp;
             }
+
+            if (nodes[0].Level == 3)
+                reorderTestCaseSequnce(fromIndex, toIndex, false);
+            else if (nodes[0].Level == 4)
+                reorderSqNumSequnce(fromIndex, toIndex, nodes[0].Parent.Index, false);
 
             return nodes;
         }
@@ -637,7 +642,62 @@ namespace XMLEditor
                 nodes[i] = temp;
             }
 
+            if(nodes[0].Level == 3)
+                reorderTestCaseSequnce(fromIndex, toIndex, true);
+            else if (nodes[0].Level == 4)
+                reorderSqNumSequnce(fromIndex, toIndex, nodes[0].Parent.Index, true);
+
             return nodes;
+        }
+
+        private void reorderTestCaseSequnce(int fromIndex, int toIndex, bool swap)
+        {
+            TestCase temp;
+            bool swapUp = true;
+
+            if (swap == !swapUp)
+            {
+                for (int i = fromIndex; i < toIndex; i++)
+                {
+                    temp = cat.tc[i + 1];
+                    cat.tc[i + 1] = cat.tc[i];
+                    cat.tc[i] = temp;
+                }
+            }
+            else
+            {
+                for (int i = fromIndex; i > toIndex; i--)
+                {
+                    temp = cat.tc[i - 1];
+                    cat.tc[i - 1] = cat.tc[i];
+                    cat.tc[i] = temp;
+                }
+            }
+        }
+
+        private void reorderSqNumSequnce(int fromIndex, int toIndex, int tcIndex, bool swap)
+        {
+            SqNum temp;
+            bool swapUp = true;
+
+            if (swap == !swapUp)
+            {
+                for (int i = fromIndex; i < toIndex; i++)
+                {
+                    temp = cat.tc[tcIndex].seqNo[i + 1];
+                    cat.tc[tcIndex].seqNo[i + 1] = cat.tc[tcIndex].seqNo[i];
+                    cat.tc[tcIndex].seqNo[i] = temp;
+                }
+            }
+            else
+            {
+                for (int i = fromIndex; i > toIndex; i--)
+                {
+                    temp = cat.tc[tcIndex].seqNo[i - 1];
+                    cat.tc[tcIndex].seqNo[i - 1] = cat.tc[tcIndex].seqNo[i];
+                    cat.tc[tcIndex].seqNo[i] = temp;
+                }
+            }
         }
 
         private void Form1_Shown(object sender, EventArgs e)
@@ -1008,6 +1068,14 @@ namespace XMLEditor
                                 cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].getPara() + "\n" +
                                 cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].getExpected() + "\n");
             }
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (treeView1.SelectedNode.Level == 3)
+                displayTestCaseClass();
+            else if (treeView1.SelectedNode.Level == 4)
+                displaySeqNumClass();
         }
     }
 }

@@ -205,18 +205,6 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // treeView1
-            // 
-            this.treeView1.BackColor = System.Drawing.SystemColors.Control;
-            this.treeView1.Location = new System.Drawing.Point(13, 42);
-            this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(231, 316);
-            this.treeView1.TabIndex = 3;
-            this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
-            this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
-            this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
-            this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
-            // 
             // backgroundWorker1
             // 
             this.backgroundWorker1.WorkerReportsProgress = true;
@@ -230,6 +218,7 @@
             this.treeView1.Size = new System.Drawing.Size(231, 316);
             this.treeView1.TabIndex = 3;
             this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
+            this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
             this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
             this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
             this.treeView1.DragOver += new System.Windows.Forms.DragEventHandler(this.treeView1_DragOver);
