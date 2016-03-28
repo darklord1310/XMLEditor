@@ -53,7 +53,6 @@ namespace XMLEditor
             createTreeView();
             createXmlFolderPath();
             cBoxFunc.DropDownStyle = ComboBoxStyle.DropDownList;
-            createXML.Enabled = false;
         }
 
         private void createTreeView()
@@ -140,9 +139,6 @@ namespace XMLEditor
                         node.Nodes.Add(dNode);
                         node.Expand();
                         treeView1.ExpandNodeComboBox(dNode);
-
-                        if(node.Level == 1)                 // if module is added then only enable the write to xml button
-                            createXML.Enabled = true;
                     }
                     else
                     {
@@ -206,9 +202,6 @@ namespace XMLEditor
             TreeNode parent = node.Parent;
             int index = node.Index;
             node.Remove();
-
-            if(node.Level < 1)
-                createXML.Enabled = false;
 
             if (index == 3)
                 cat.tc.RemoveAt(node.Index);
