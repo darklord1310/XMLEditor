@@ -104,7 +104,7 @@ namespace XMLEditor
                         cat.setCategory(node.Parent.Text);
                         cat.setModule(node.Text);
                         dNode = createNormalTreeNode("TC_" + (node.Nodes.Count + 1).ToString("D4"));
-                        txtBoxTcDesc.Enabled = true;
+                        txtBoxTcDesc.ReadOnly = false;
                         txtBoxTcDesc.Text = string.Empty;
                         txtBoxTcDesc.Focus();
                         lblTcDesc.Text += " (Press enter to continue)";
@@ -115,7 +115,7 @@ namespace XMLEditor
                     else
                     {
                         dNode = createNormalTreeNode("SN_" + (node.Nodes.Count + 1).ToString("D4"));
-                        txtBoxSqDesc.Enabled = true;
+                        txtBoxSqDesc.ReadOnly = false;
                         txtBoxSqDesc.Focus();
                         txtBoxSqDesc.Text = string.Empty;
                         txtBoxPara.Text = string.Empty;
@@ -260,13 +260,13 @@ namespace XMLEditor
 
                     if (treeView1.SelectedNode.Level == 3)
                     {
-                        txtBoxTcDesc.Enabled = true;
+                        txtBoxTcDesc.ReadOnly = false;
                         txtBoxTcDesc.Focus();
                         lblTcDesc.Text += " (Press enter to continue)";
                     }
                     else
                     {
-                        txtBoxSqDesc.Enabled = true;
+                        txtBoxSqDesc.ReadOnly = false;
                         txtBoxSqDesc.Focus();
                         lblSqDesc.Text += " (Press enter to continue)";
                     }
@@ -839,9 +839,9 @@ namespace XMLEditor
                         cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setPara(txtBoxPara.Text);
                     else
                         cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setPara(txtBoxPara.Text);
-                    txtBoxPara.Enabled = false;
+                    txtBoxPara.ReadOnly = true;
                     lblPara.Text = "Parameter";
-                    txtBoxExpOut.Enabled = true;
+                    txtBoxExpOut.ReadOnly = false;
                     txtBoxExpOut.Focus();
                     lblExpOut.Text += " (Press enter to continue)";
                 }
@@ -962,7 +962,7 @@ namespace XMLEditor
                     else
                         cat.tc[treeView1.SelectedNode.Index].setDesc(txtBoxTcDesc.Text);
                     treeView1.Enabled = true;
-                    txtBoxTcDesc.Enabled = false;
+                    txtBoxTcDesc.ReadOnly = true;
                     lblTcDesc.Text = "Test Case Description";
                     //displayTestCaseClass();
                 }
@@ -984,7 +984,7 @@ namespace XMLEditor
                         cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setDesc(txtBoxSqDesc.Text);
                     else
                         cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setDesc(txtBoxSqDesc.Text);
-                    txtBoxSqDesc.Enabled = false;
+                    txtBoxSqDesc.ReadOnly = true;
                     lblSqDesc.Text = "Seq No Description";
                     cBoxFunc.Enabled = true;
                     cBoxFunc.DroppedDown = true;
@@ -1007,9 +1007,9 @@ namespace XMLEditor
                         cat.tc[treeView1.SelectedNode.Index].seqNo[treeView1.SelectedNode.Nodes.Count - 1].setExpected(txtBoxExpOut.Text);
                     else
                         cat.tc[treeView1.SelectedNode.Parent.Index].seqNo[treeView1.SelectedNode.Index].setExpected(txtBoxExpOut.Text);
-                    txtBoxExpOut.Enabled = false;
+                    txtBoxExpOut.ReadOnly = true;
                     lblExpOut.Text = "Expected Outcome";
-                    txtBoxExpOut.Enabled = false;
+                    txtBoxExpOut.ReadOnly = true;
                     cBoxFunc.Enabled = false;
                     treeView1.Enabled = true;
                     //displaySeqNumClass();
@@ -1028,9 +1028,9 @@ namespace XMLEditor
 
                 if (treeView1.SelectedNode.Level == 3)
                 {
-                    txtBoxPara.Enabled = true;
+                    txtBoxPara.ReadOnly = false;
                     txtBoxPara.Focus();
-                    txtBoxExpOut.Enabled = false;
+                    txtBoxExpOut.ReadOnly = true;
                     txtBoxPara.Text = string.Empty;
                     txtBoxExpOut.Text = string.Empty;
                     lblPara.Text = "Parameter";
