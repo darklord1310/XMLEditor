@@ -22,6 +22,8 @@ namespace XMLEditor
         string moduleName = string.Empty;
         string moduleID = string.Empty;
         string funcName = string.Empty;
+        string para = string.Empty;
+        string outcome = string.Empty;
         string comboBoxSelectedItem = string.Empty;
         TestMenu[] tm = new TestMenu[7];
         Category cat = new Category();
@@ -425,10 +427,10 @@ namespace XMLEditor
                                 updateModule(row);
                                 break;
                             case "Driver":
-                                updateFuncName(row, "Driver");
+                                updateFuncNameParOutcome(row, "Driver");
                                 break;
                             case "Library":
-                                updateFuncName(row, "Library");
+                                updateFuncNameParOutcome(row, "Library");
                                 break;
                             default:
                                 break;
@@ -442,6 +444,8 @@ namespace XMLEditor
 
             //MessageBox.Show(tm[1].getModuleName());
             //MessageBox.Show(tm[1].getFuncName());
+            MessageBox.Show(tm[1].getPara());
+            MessageBox.Show(tm[1].getOutcome());
         }
 
         private string getExcelCellValue(int row, int col)
@@ -482,23 +486,35 @@ namespace XMLEditor
             }
         }
 
-        private void updateFuncName(int row, string module)
+        private void updateFuncNameParOutcome(int row, string module)
         {
             if (!string.Equals(getExcelCellValue(row, 2), "Function Name") &&
-                                    !string.IsNullOrEmpty(getExcelCellValue(row, 2)))
+                               !string.IsNullOrEmpty(getExcelCellValue(row, 2)))
             {
                 funcName += getExcelCellValue(row, 2) + ",";
+                para += getExcelCellValue(row, 3) + ",";
+                outcome += getExcelCellValue(row, 4) + ",";
 
                 if (getExcelCellValue(row + 1, 1) == null)
                 {
                     funcName = funcName.Remove(funcName.Length - 1);
                     funcName += "|";
+                    para = para.Remove(para.Length - 1);
+                    para += "&";
+                    outcome = outcome.Remove(outcome.Length - 1);
+                    outcome += "&";
 
                     if (getExcelCellValue(row + 2, 1) == null)
                     {
                         funcName = funcName.Remove(funcName.Length - 1);
                         tm[getTestMenuNum(module)].setFuncName(funcName);
                         funcName = string.Empty;
+                        para = para.Remove(para.Length - 1);
+                        tm[getTestMenuNum(module)].setPara(para);
+                        para = string.Empty;
+                        outcome = outcome.Remove(outcome.Length - 1);
+                        tm[getTestMenuNum(module)].setOutcome(outcome);
+                        outcome = string.Empty;
                     }
                 }
             }
