@@ -306,7 +306,6 @@ namespace XMLEditor
                     docMenu.Show(PointToScreen(p));
                 }
             }
-
         }
 
         public void createDataPath()
@@ -336,7 +335,7 @@ namespace XMLEditor
                 }
                 else
                 {
-                    showMsgBox("Excel file with name " + filename + " not found.", MessageBoxIcon.Warning);
+                    showMsgBox("Excel file with name " + filename + " not found in AppData folder. Please load it manually.", MessageBoxIcon.Warning);
                 }
             }
         }
@@ -905,14 +904,14 @@ namespace XMLEditor
         {
             this.Cursor = Cursors.WaitCursor;
             XMLWriter writer = new XMLWriter();
-            string filename = cat.getCategory() + "_" + cat.getModule() + ".xml";
-            int status = writer.writeToXML(cat.getCategory(), cat.getModule(), cat.tc, filename);
+            string path = Path.Combine(xmlPath, cat.getCategory() + "_" + cat.getModule() + ".xml");
+            int status = writer.writeToXML(cat.getCategory(), cat.getModule(), cat.tc, path);
             this.Cursor = Cursors.Default;
 
             if (status == 1)
                 showMsgBox(filename + " created successfully.", MessageBoxIcon.Information);
             else
-                showMsgBox("Error occured! " + filename + " is not created.", MessageBoxIcon.Error);
+                showMsgBox("Error occured! " + cat.getCategory() + "_" + cat.getModule() + ".xml" + " is not created.", MessageBoxIcon.Error);
         }
 
 

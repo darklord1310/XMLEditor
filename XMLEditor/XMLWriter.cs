@@ -52,7 +52,7 @@ namespace XMLEditor
             return seqNo;
         }
 
-        public int writeToXML(string category, string module, List<TestCase> tc, string filename)
+        public int writeToXML(string category, string module, List<TestCase> tc, string path)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace XMLEditor
                 root.Add(writeTestCase(tc));
 
                 // save changes
-                root.Save(filename);
+                root.Save(path);
                 return 1;
             }
             catch(Exception)
