@@ -46,6 +46,7 @@
             this.txtBoxPara = new System.Windows.Forms.TextBox();
             this.lblExpOut = new System.Windows.Forms.Label();
             this.txtBoxExpOut = new System.Windows.Forms.TextBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.treeView1 = new XMLEditor.DropDownTreeView();
             this.TreeviewIL = new System.Windows.Forms.ImageList(this.components);
@@ -93,11 +94,13 @@
             // 
             // txtBoxTcDesc
             // 
+            this.txtBoxTcDesc.Enabled = false;
             this.txtBoxTcDesc.Location = new System.Drawing.Point(269, 58);
             this.txtBoxTcDesc.Multiline = true;
             this.txtBoxTcDesc.Name = "txtBoxTcDesc";
             this.txtBoxTcDesc.Size = new System.Drawing.Size(226, 42);
             this.txtBoxTcDesc.TabIndex = 5;
+            this.txtBoxTcDesc.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxTcDesc_KeyDown);
             // 
             // lblSqDesc
             // 
@@ -110,11 +113,13 @@
             // 
             // txtBoxSqDesc
             // 
+            this.txtBoxSqDesc.Enabled = false;
             this.txtBoxSqDesc.Location = new System.Drawing.Point(269, 136);
             this.txtBoxSqDesc.Multiline = true;
             this.txtBoxSqDesc.Name = "txtBoxSqDesc";
             this.txtBoxSqDesc.Size = new System.Drawing.Size(226, 42);
             this.txtBoxSqDesc.TabIndex = 7;
+            this.txtBoxSqDesc.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxSqDesc_KeyDown);
             // 
             // lblDiagCmd
             // 
@@ -143,11 +148,14 @@
             // 
             // cBoxFunc
             // 
+            this.cBoxFunc.Enabled = false;
             this.cBoxFunc.FormattingEnabled = true;
             this.cBoxFunc.Location = new System.Drawing.Point(387, 207);
             this.cBoxFunc.Name = "cBoxFunc";
             this.cBoxFunc.Size = new System.Drawing.Size(108, 21);
             this.cBoxFunc.TabIndex = 11;
+            this.cBoxFunc.DropDown += new System.EventHandler(this.cBoxFunc_DropDown);
+            this.cBoxFunc.SelectedIndexChanged += new System.EventHandler(this.cBoxFunc_SelectedIndexChanged);
             // 
             // lblPara
             // 
@@ -160,11 +168,13 @@
             // 
             // txtBoxPara
             // 
+            this.txtBoxPara.Enabled = false;
             this.txtBoxPara.Location = new System.Drawing.Point(269, 251);
             this.txtBoxPara.Multiline = true;
             this.txtBoxPara.Name = "txtBoxPara";
             this.txtBoxPara.Size = new System.Drawing.Size(226, 42);
             this.txtBoxPara.TabIndex = 13;
+            this.txtBoxPara.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxPara_KeyDown);
             // 
             // lblExpOut
             // 
@@ -177,11 +187,35 @@
             // 
             // txtBoxExpOut
             // 
+            this.txtBoxExpOut.Enabled = false;
             this.txtBoxExpOut.Location = new System.Drawing.Point(269, 316);
             this.txtBoxExpOut.Multiline = true;
             this.txtBoxExpOut.Name = "txtBoxExpOut";
             this.txtBoxExpOut.Size = new System.Drawing.Size(226, 42);
             this.txtBoxExpOut.TabIndex = 15;
+            this.txtBoxExpOut.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxExpOut_KeyDown);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(269, 367);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 16;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // treeView1
+            // 
+            this.treeView1.BackColor = System.Drawing.SystemColors.Control;
+            this.treeView1.Location = new System.Drawing.Point(13, 42);
+            this.treeView1.Name = "treeView1";
+            this.treeView1.Size = new System.Drawing.Size(231, 316);
+            this.treeView1.TabIndex = 3;
+            this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
+            this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
+            this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
+            this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
             // 
             // backgroundWorker1
             // 
@@ -214,7 +248,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(507, 391);
+            this.ClientSize = new System.Drawing.Size(507, 402);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.txtBoxExpOut);
             this.Controls.Add(this.lblExpOut);
             this.Controls.Add(this.txtBoxPara);
@@ -230,7 +265,9 @@
             this.Controls.Add(this.treeView1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
+            this.MaximizeBox = false;
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "XML Editor";
             this.Shown += new System.EventHandler(this.Form1_Shown);
             this.menuStrip1.ResumeLayout(false);
@@ -259,6 +296,7 @@
         private System.Windows.Forms.TextBox txtBoxPara;
         private System.Windows.Forms.Label lblExpOut;
         private System.Windows.Forms.TextBox txtBoxExpOut;
+        private System.Windows.Forms.Button button1;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.ImageList TreeviewIL;
     }
