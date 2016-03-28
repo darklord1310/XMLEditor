@@ -769,6 +769,13 @@ namespace XMLEditor
                 return false;
             }
         }
+
+        // create xml button click
+        private void button1_Click(object sender, EventArgs e)
+        {
+            XMLWriter writer = new XMLWriter();
+            writer.writeToXML();
+        }
     }
 
 }

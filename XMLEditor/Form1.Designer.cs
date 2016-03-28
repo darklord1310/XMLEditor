@@ -49,6 +49,7 @@
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.treeView1 = new XMLEditor.DropDownTreeView();
             this.TreeviewIL = new System.Windows.Forms.ImageList(this.components);
+            this.button1 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -193,7 +194,7 @@
             this.treeView1.BackColor = System.Drawing.SystemColors.Control;
             this.treeView1.Location = new System.Drawing.Point(13, 42);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(231, 316);
+            this.treeView1.Size = new System.Drawing.Size(231, 348);
             this.treeView1.TabIndex = 3;
             this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
             this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
@@ -210,11 +211,22 @@
             this.TreeviewIL.Images.SetKeyName(2, "delete.png");
             this.TreeviewIL.Images.SetKeyName(3, "edit.png");
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(322, 365);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(113, 23);
+            this.button1.TabIndex = 16;
+            this.button1.Text = "Create XML";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(507, 391);
+            this.ClientSize = new System.Drawing.Size(507, 402);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.txtBoxExpOut);
             this.Controls.Add(this.lblExpOut);
             this.Controls.Add(this.txtBoxPara);
@@ -261,6 +273,7 @@
         private System.Windows.Forms.TextBox txtBoxExpOut;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.ImageList TreeviewIL;
+        private System.Windows.Forms.Button button1;
     }
 }
 
