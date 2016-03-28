@@ -15,53 +15,56 @@ namespace XMLEditor
 
         }
 
-        public void writeTestCase(XElement rootNode, 
-                                  string   testCaseNo,
-                                  string   testCaseDesc,
-                                  string   sequenceNo
-                                  )
+        public XElement writeTestCase(List<TestCase> testCases)
         {
-            
+            XElement tcName = new XElement("TestCase");
+
+            foreach (TestCase testcase in testCases)
+            {
+                XAttribute tc = new XAttribute("tc", "TC_0001");
+                XElement testDesc = new XElement("Desc", testcase.getDesc() );
+                XElement seqNo = writeSequenceNo(testcase.seqNo);
+                tcName.Add(seqNo);
+            }
+
+            return tcName;
         }
 
-        public void writeToXML()
+        public XElement writeSequenceNo(List<SqNum> sequences)
         {
-            XElement authors = new XElement("Authors");
-            // Add child nodes
-            XAttribute name = new XAttribute("Author", "Mahesh Chand");
-            XElement book = new XElement("Book", "GDI+ Programming");
-            XElement cost = new XElement("Cost", "$49.95");
-            XElement publisher = new XElement("Publisher", "Addison-Wesley");
-            XElement author = new XElement("Author");
-            author.Add(name);
-            author.Add(book);
-            author.Add(cost);
-            author.Add(publisher);
-            authors.Add(author);
+            XElement seqNo = new XElement("SeqNum");
 
-            name = new XAttribute("Name", "Mike Gold");
-            book = new XElement("Book", "Programmer's Guide to C#");
-            cost = new XElement("Cost", "$44.95");
-            publisher = new XElement("Publisher", "Microgold Publishing");
-            author = new XElement("Author");
-            author.Add(name);
-            author.Add(book);
-            author.Add(cost);
-            author.Add(publisher);
-            authors.Add(author);
+            foreach(SqNum sequence in sequences)
+            {
+                XAttribute sn = new XAttribute("sn", sequence.getSeqNo().ToString() );
+                XElement seqDesc = new XElement("Desc", sequence.getDesc().ToString() );
+                XElement diagcmd = new XElement("DiagCmd", sequence.getDiagCmd().ToString() );
+                XElement param = new XElement("Param", sequence.getPara().ToString());
+                XElement expect = new XElement("Expect", sequence.getExpected().ToString());
+                
+                seqNo.Add(sn);
+                seqNo.Add(seqDesc);
+                seqNo.Add(diagcmd);
+                seqNo.Add(param);
+                seqNo.Add(expect);              
+            }
 
-            name = new XAttribute("Name", "Scott Lysle");
-            book = new XElement("Book", "Custom Controls");
-            cost = new XElement("Cost", "$39.95");
-            publisher = new XElement("Publisher", "C# Corner");
-            author = new XElement("Author");
-            author.Add(name);
-            author.Add(book);
-            author.Add(cost);
-            author.Add(publisher);
-            authors.Add(author);
+            return seqNo;
+        }
 
-            authors.Save(@"Authors.xml");
+        public void writeToXML(string category, string module, List<TestCase> tc)
+        {
+            XElement root = new XElement("TestMenu");
+            XElement categoryName = new XElement("Category", category);
+            XElement moduleName = new XElement("Module", module);
+
+            //add from root
+            root.Add(categoryName);
+            root.Add(moduleName);
+            root.Add(writeTestCase(tc) );
+
+            // save changes
+            root.Save(@categoryName + "_" + moduleName + ".xml");
         }
     }
 }

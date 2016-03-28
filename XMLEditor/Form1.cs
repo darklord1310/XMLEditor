@@ -884,7 +884,7 @@ namespace XMLEditor
         private void button1_Click(object sender, EventArgs e)
         {
             XMLWriter writer = new XMLWriter();
-            writer.writeToXML();
+            writer.writeToXML(cat.getCategory(), cat.getModule(), cat.tc);
         }
 
 
