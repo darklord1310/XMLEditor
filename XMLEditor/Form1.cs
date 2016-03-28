@@ -55,7 +55,6 @@ namespace XMLEditor
             createTreeView();
             createXmlFolderPath();
             cBoxFunc.DropDownStyle = ComboBoxStyle.DropDownList;
-            createXML.Enabled = false;
         }
 
         private void createTreeView()
@@ -142,9 +141,6 @@ namespace XMLEditor
                         node.Nodes.Add(dNode);
                         node.Expand();
                         treeView1.ExpandNodeComboBox(dNode);
-
-                        if(node.Level == 1)                 // if module is added then only enable the write to xml button
-                            createXML.Enabled = true;
                     }
                     else
                     {
@@ -230,9 +226,6 @@ namespace XMLEditor
             TreeNode parent = node.Parent;
             int index = node.Index;
             node.Remove();
-
-            if(node.Level < 1)
-                createXML.Enabled = false;
 
             if (index == 3)
                 cat.tc.RemoveAt(node.Index);
@@ -334,7 +327,6 @@ namespace XMLEditor
                     docMenu.Show(PointToScreen(p));
                 }
             }
-
         }
 
         public void createDataPath()
@@ -364,7 +356,7 @@ namespace XMLEditor
                 }
                 else
                 {
-                    showMsgBox("Excel file with name " + filename + " not found.", MessageBoxIcon.Warning);
+                    showMsgBox("Excel file with name " + filename + " not found in AppData folder. Please load it manually.", MessageBoxIcon.Warning);
                 }
             }
         }
@@ -976,14 +968,14 @@ namespace XMLEditor
         {
             this.Cursor = Cursors.WaitCursor;
             XMLWriter writer = new XMLWriter();
-            string filename = cat.getCategory() + "_" + cat.getModule() + ".xml";
-            int status = writer.writeToXML(cat.getCategory(), cat.getModule(), cat.tc, filename);
+            string path = Path.Combine(xmlPath, cat.getCategory() + "_" + cat.getModule() + ".xml");
+            int status = writer.writeToXML(cat.getCategory(), cat.getModule(), cat.tc, path);
             this.Cursor = Cursors.Default;
 
             if (status == 1)
-                showMsgBox(filename + " created successfully.", MessageBoxIcon.Information);
+                showMsgBox(cat.getCategory() + "_" + cat.getModule() + ".xml" + " created successfully.", MessageBoxIcon.Information);
             else
-                showMsgBox("Error occured! " + filename + " is not created.", MessageBoxIcon.Error);
+                showMsgBox("Error occured! " + cat.getCategory() + "_" + cat.getModule() + ".xml" + " is not created.", MessageBoxIcon.Error);
         }
 
 
