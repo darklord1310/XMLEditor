@@ -78,6 +78,7 @@
     <Compile Include="TestMenu.cs" />
     <Compile Include="SQLDatabase.cs" />
     <Compile Include="SubstringExtension.cs" />
+    <Compile Include="XMLWriter.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
       <SubType>Designer</SubType>

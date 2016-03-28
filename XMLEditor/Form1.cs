@@ -34,7 +34,7 @@ namespace XMLEditor
         Excel._Worksheet xlWorksheet;
         Excel.Range xlRange;
 
-        string appPath, folderPath;
+        string appPath, folderPath, xmlPath;
         ContextMenuStrip docMenu;
         enum Images { NODE, ADD, DELETE, EDIT };
 
@@ -51,7 +51,9 @@ namespace XMLEditor
             InitializeComponent();
             this.treeView1.ImageList = TreeviewIL;
             createTreeView();
+            createXmlFolderPath();
             cBoxFunc.DropDownStyle = ComboBoxStyle.DropDownList;
+            createXML.Enabled = false;
         }
 
         private void createTreeView()
@@ -138,6 +140,9 @@ namespace XMLEditor
                         node.Nodes.Add(dNode);
                         node.Expand();
                         treeView1.ExpandNodeComboBox(dNode);
+
+                        if(node.Level == 1)                 // if module is added then only enable the write to xml button
+                            createXML.Enabled = true;
                     }
                     else
                     {
@@ -201,6 +206,9 @@ namespace XMLEditor
             TreeNode parent = node.Parent;
             int index = node.Index;
             node.Remove();
+
+            if(node.Level < 1)
+                createXML.Enabled = false;
 
             if (index == 3)
                 cat.tc.RemoveAt(node.Index);
@@ -330,6 +338,18 @@ namespace XMLEditor
                 {
                     showMsgBox("Excel file with name " + filename + " not found.", MessageBoxIcon.Warning);
                 }
+            }
+        }
+
+
+        public void createXmlFolderPath()
+        {
+            appPath = Path.GetDirectoryName(Application.ExecutablePath);  // get the root path of the dir
+            xmlPath = Path.Combine(appPath, "XML");                // get the path to the AppData folder
+
+            if (!Directory.Exists(xmlPath))
+            {
+                Directory.CreateDirectory(xmlPath);
             }
         }
 
@@ -713,12 +733,6 @@ namespace XMLEditor
             //this.Deactivate += TestServerGUI_Deactivate;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            treeView1.Enabled = true;
-
-        }
-
         private void treeView1_DragOver(object sender, System.Windows.Forms.DragEventArgs e)
         {
             TreeNode NodeOver = this.treeView1.GetNodeAt(this.treeView1.PointToClient(Cursor.Position));
@@ -945,6 +959,22 @@ namespace XMLEditor
                 return false;
             }
         }
+
+        // create xml button click
+        private void createXML_Click(object sender, EventArgs e)
+        {
+            this.Cursor = Cursors.WaitCursor;
+            XMLWriter writer = new XMLWriter();
+            string filename = cat.getCategory() + "_" + cat.getModule() + ".xml";
+            int status = writer.writeToXML(cat.getCategory(), cat.getModule(), cat.tc, filename);
+            this.Cursor = Cursors.Default;
+
+            if (status == 1)
+                showMsgBox(filename + " created successfully.", MessageBoxIcon.Information);
+            else
+                showMsgBox("Error occured! " + filename + " is not created.", MessageBoxIcon.Error);
+        }
+
 
         private void txtBoxTcDesc_KeyDown(object sender, KeyEventArgs e)
         {
