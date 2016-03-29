@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -78,6 +79,8 @@
     <Compile Include="TestMenu.cs" />
     <Compile Include="SQLDatabase.cs" />
     <Compile Include="SubstringExtension.cs" />
+    <Compile Include="TokenInfo.cs" />
+    <Compile Include="Tokenize.cs" />
     <Compile Include="XMLWriter.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>

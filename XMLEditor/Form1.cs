@@ -976,6 +976,8 @@ namespace XMLEditor
                 showMsgBox(cat.getCategory() + "_" + cat.getModule() + ".xml" + " created successfully.", MessageBoxIcon.Information);
             else
                 showMsgBox("Error occured! " + cat.getCategory() + "_" + cat.getModule() + ".xml" + " is not created.", MessageBoxIcon.Error);
+
+            validateParam("00|11|22|3333|", "23");
         }
 
 
@@ -1162,6 +1164,40 @@ namespace XMLEditor
                 txtBoxExpOut.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getExpected();
             }
         }
+
+        private int getNumberOfParam(string text, char[] separators)
+        {
+            List<TokenInfo> token = (List<TokenInfo>)Tokenize.GetTokens(text, separators);
+            return token.Count;
+        }
+
+        private bool compareNumberOfParam(string str1, string str2)
+        {
+            char[] separators = {'|'};
+            int count1 = getNumberOfParam(str1, separators);
+            int count2 = getNumberOfParam(str2, separators);
+
+            if (count1 == count2)
+                return true;
+            else
+                return false;
+
+        }
+
+        private void validateParam(string strFromExcel, string strFromUser)
+        {
+            char[] separators = { '|' };
+            List<TokenInfo> excelToken = (List<TokenInfo>)Tokenize.GetTokens(strFromExcel, separators);
+            List<TokenInfo> userToken = (List<TokenInfo>)Tokenize.GetTokens(strFromUser, separators);
+
+            for(int i = 0; i < excelToken.Count; i++)
+            {
+                MessageBox.Show(excelToken[i].Token);
+            }
+
+        }
+
+
     }
 }
 
