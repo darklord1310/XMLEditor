@@ -22,9 +22,13 @@ namespace XMLEditor
         string moduleName = string.Empty;
         string moduleID = string.Empty;
         string funcName = string.Empty;
+        string para = string.Empty;
+        string outcome = string.Empty;
         string comboBoxSelectedItem = string.Empty;
         TestMenu[] tm = new TestMenu[7];
         Category cat = new Category();
+        const bool swapUpNode = true;   //true for swap up and swap down for false
+        const bool getPara = true;  //true to get parameter and get expected outcome for false
 
         private string NodeMap;
         private const int MAPSIZE = 128;
@@ -159,7 +163,7 @@ namespace XMLEditor
                 txtBoxCat.Text = tm[num].getCategoryID().ToString();
                 string[] modules = tm[num].getModuleName().Split('|');
                 string[] moduleID = tm[num].getModuleID().Split('|');
-                int index = getModuleId(modules, getModuleName(node));
+                int index = getModuleIdIndex(modules, getModuleName(node));
                 if (index != 99)
                     txtBoxMod.Text = moduleID[index];
                 else
@@ -184,6 +188,10 @@ namespace XMLEditor
                 return node.Parent.Parent.Text;
             else if (node.Level == 4)
                 return node.Parent.Parent.Parent.Text;
+            else if (node.Level == 2)
+                return node.Parent.Text;
+            else if (node.Level == 1)
+                return node.Text;
             else
                 return null;
         }
@@ -194,11 +202,13 @@ namespace XMLEditor
                 return node.Parent.Text;
             else if (node.Level == 4)
                 return node.Parent.Parent.Text;
+            else if (node.Level == 2)
+                return node.Text;
             else
                 return null;
         }
 
-        private int getModuleId(string[] modules, string module)
+        private int getModuleIdIndex(string[] modules, string module)
         {
             for(int i = 0; i < modules.Count(); i++)
             {
@@ -225,12 +235,13 @@ namespace XMLEditor
         {
             TreeNode parent = node.Parent;
             int index = node.Index;
+            int level = node.Level;
             node.Remove();
 
-            if (index == 3)
-                cat.tc.RemoveAt(node.Index);
-            else if (index == 4)
-                cat.tc[node.Parent.Index].seqNo.RemoveAt(node.Index);
+            if (level == 3)
+                cat.tc.RemoveAt(index);
+            else if (level == 4)
+                cat.tc[parent.Index].seqNo.RemoveAt(index);
 
             for (int i = index; i < parent.Nodes.Count; i++)
             {
@@ -425,10 +436,10 @@ namespace XMLEditor
                                 updateModule(row);
                                 break;
                             case "Driver":
-                                updateFuncName(row, "Driver");
+                                updateFuncNameParOutcome(row, "Driver");
                                 break;
                             case "Library":
-                                updateFuncName(row, "Library");
+                                updateFuncNameParOutcome(row, "Library");
                                 break;
                             default:
                                 break;
@@ -442,6 +453,8 @@ namespace XMLEditor
 
             //MessageBox.Show(tm[1].getModuleName());
             //MessageBox.Show(tm[1].getFuncName());
+            //MessageBox.Show(tm[1].getPara());
+            //MessageBox.Show(tm[1].getOutcome());
         }
 
         private string getExcelCellValue(int row, int col)
@@ -482,23 +495,35 @@ namespace XMLEditor
             }
         }
 
-        private void updateFuncName(int row, string module)
+        private void updateFuncNameParOutcome(int row, string module)
         {
             if (!string.Equals(getExcelCellValue(row, 2), "Function Name") &&
-                                    !string.IsNullOrEmpty(getExcelCellValue(row, 2)))
+                               !string.IsNullOrEmpty(getExcelCellValue(row, 2)))
             {
                 funcName += getExcelCellValue(row, 2) + ",";
+                para += getExcelCellValue(row, 3) + ",";
+                outcome += getExcelCellValue(row, 4) + ",";
 
                 if (getExcelCellValue(row + 1, 1) == null)
                 {
                     funcName = funcName.Remove(funcName.Length - 1);
                     funcName += "|";
+                    para = para.Remove(para.Length - 1);
+                    para += "&";
+                    outcome = outcome.Remove(outcome.Length - 1);
+                    outcome += "&";
 
                     if (getExcelCellValue(row + 2, 1) == null)
                     {
                         funcName = funcName.Remove(funcName.Length - 1);
                         tm[getTestMenuNum(module)].setFuncName(funcName);
                         funcName = string.Empty;
+                        para = para.Remove(para.Length - 1);
+                        tm[getTestMenuNum(module)].setPara(para);
+                        para = string.Empty;
+                        outcome = outcome.Remove(outcome.Length - 1);
+                        tm[getTestMenuNum(module)].setOutcome(outcome);
+                        outcome = string.Empty;
                     }
                 }
             }
@@ -516,7 +541,7 @@ namespace XMLEditor
         }
 
         /*
-         * Get string array for  catergories and modules extract from excel
+         * Get string array for catergories and modules extract from excel
          */
         private string[] getStringArray(TreeNode node)
         {
@@ -672,9 +697,9 @@ namespace XMLEditor
             }
 
             if (nodes[0].Level == 3)
-                reorderTestCaseSequnce(fromIndex, toIndex, false);
+                reorderTestCaseSequnce(fromIndex, toIndex, !swapUpNode);
             else if (nodes[0].Level == 4)
-                reorderSqNumSequnce(fromIndex, toIndex, nodes[0].Parent.Index, false);
+                reorderSqNumSequnce(fromIndex, toIndex, nodes[0].Parent.Index, !swapUpNode);
 
             return nodes;
         }
@@ -690,9 +715,9 @@ namespace XMLEditor
             }
 
             if(nodes[0].Level == 3)
-                reorderTestCaseSequnce(fromIndex, toIndex, true);
+                reorderTestCaseSequnce(fromIndex, toIndex, swapUpNode);
             else if (nodes[0].Level == 4)
-                reorderSqNumSequnce(fromIndex, toIndex, nodes[0].Parent.Index, true);
+                reorderSqNumSequnce(fromIndex, toIndex, nodes[0].Parent.Index, swapUpNode);
 
             return nodes;
         }
@@ -700,9 +725,8 @@ namespace XMLEditor
         private void reorderTestCaseSequnce(int fromIndex, int toIndex, bool swap)
         {
             TestCase temp;
-            bool swapUp = true;
 
-            if (swap == !swapUp)
+            if (swap == !swapUpNode)
             {
                 for (int i = fromIndex; i < toIndex; i++)
                 {
@@ -725,9 +749,8 @@ namespace XMLEditor
         private void reorderSqNumSequnce(int fromIndex, int toIndex, int tcIndex, bool swap)
         {
             SqNum temp;
-            bool swapUp = true;
 
-            if (swap == !swapUp)
+            if (swap == !swapUpNode)
             {
                 for (int i = fromIndex; i < toIndex; i++)
                 {
@@ -1033,6 +1056,7 @@ namespace XMLEditor
         private void txtBoxPara_KeyDown(object sender, KeyEventArgs e)
         {
             TreeNode node = treeView1.SelectedNode;
+            string[] strOutcome = null;
             if (e.KeyCode == Keys.Enter)
             {
                 if (string.IsNullOrEmpty(txtBoxPara.Text))
@@ -1042,15 +1066,30 @@ namespace XMLEditor
                 }
                 else
                 {
-                    if (node.Level == 3)
-                        cat.tc[node.Index].seqNo[node.Nodes.Count - 1].setPara(txtBoxPara.Text);
-                    else
-                        cat.tc[node.Parent.Index].seqNo[node.Index].setPara(txtBoxPara.Text);
+                    strOutcome = getparaOrOutcome(node, !getPara);
+                    //do
+                    //{
+                        if (node.Level == 3)
+                            cat.tc[node.Index].seqNo[node.Nodes.Count - 1].setPara(txtBoxPara.Text);
+                        else
+                            cat.tc[node.Parent.Index].seqNo[node.Index].setPara(txtBoxPara.Text);
+                    //} while (!verifiedParaOrOutcome(txtBoxPara.Text, getPara));
+
                     txtBoxPara.ReadOnly = true;
                     lblPara.Text = "Parameter";
-                    txtBoxExpOut.ReadOnly = false;
-                    txtBoxExpOut.Focus();
-                    lblExpOut.Text += " (Press enter to continue)";
+
+                    if (!strOutcome[cBoxFunc.SelectedIndex].Equals("-"))
+                    {
+                        txtBoxExpOut.ReadOnly = false;
+                        txtBoxExpOut.Focus();
+                        lblExpOut.Text += " (Press enter to continue)";
+                    }
+                    else
+                    {
+                        cBoxFunc.Enabled = false;
+                        treeView1.Enabled = true;
+                        tvMode = -1;
+                    }
                 }
             }
         }
@@ -1085,23 +1124,46 @@ namespace XMLEditor
         private void cBoxFunc_SelectedIndexChanged(object sender, EventArgs e)
         {
             TreeNode node = treeView1.SelectedNode;
+            string[] strPara = null, strOutcome = null;
+            txtBoxPara.ReadOnly = true;
+            txtBoxExpOut.ReadOnly = true;
             if(cBoxFunc.SelectedItem != null && !string.Equals(comboBoxSelectedItem, cBoxFunc.SelectedItem.ToString()))
             {
                 if (node.Level == 3)
                     cat.tc[node.Index].seqNo[node.Nodes.Count - 1].setDiagCmd(txtBoxCat.Text + txtBoxMod.Text + cBoxFunc.SelectedItem.ToString());
                 else
                     cat.tc[node.Parent.Index].seqNo[node.Index].setDiagCmd(txtBoxCat.Text + txtBoxMod.Text + cBoxFunc.SelectedItem.ToString());
-                
+
+                strPara = getparaOrOutcome(node, getPara);
+                strOutcome = getparaOrOutcome(node, !getPara);
+
                 if (tvMode != -1)
                 {
-                    txtBoxPara.ReadOnly = false;
-                    txtBoxPara.Focus();
-                    txtBoxExpOut.ReadOnly = true;
-                    txtBoxPara.Text = string.Empty;
-                    txtBoxExpOut.Text = string.Empty;
-                    lblPara.Text = "Parameter";
-                    lblExpOut.Text = "Expected Outcome";
-                    lblPara.Text += " (Press enter to continue)";
+                    if (!strPara[cBoxFunc.SelectedIndex].Equals("-"))
+                    {
+                        txtBoxPara.ReadOnly = false;
+                        txtBoxPara.Focus();
+                        txtBoxExpOut.ReadOnly = true;
+                        txtBoxPara.Text = string.Empty;
+                        txtBoxExpOut.Text = string.Empty;
+                        lblPara.Text = "Parameter";
+                        lblExpOut.Text = "Expected Outcome";
+                        lblPara.Text += " (Press enter to continue)";
+                    }
+                    else if (!strOutcome[cBoxFunc.SelectedIndex].Equals("-"))
+                    {
+                        txtBoxExpOut.ReadOnly = false;
+                        txtBoxExpOut.Focus();
+                        lblExpOut.Text += " (Press enter to continue)";
+                    }
+                    else
+                    {
+                        cBoxFunc.Enabled = false;
+                        treeView1.Enabled = true;
+                        tvMode = -1; 
+                    }
+
+                    comboBoxSelectedItem = null;
                 }
             }
         }
@@ -1112,6 +1174,104 @@ namespace XMLEditor
             {
                 comboBoxSelectedItem = cBoxFunc.SelectedItem.ToString();
             }
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            TreeNode node = treeView1.SelectedNode;
+            clearAllTextbox();
+
+            if (treeView1.SelectedNode.Level == 3)
+            {
+                txtBoxTcDesc.Text = cat.tc[node.Index].getDesc();
+                cBoxFunc.SelectedItem = null;
+            }
+            else if (treeView1.SelectedNode.Level == 4)
+            {
+                string funcNames = cat.tc[node.Parent.Index].seqNo[node.Index].getDiagCmd().Substring(4);
+                txtBoxTcDesc.Text = cat.tc[node.Parent.Index].getDesc();
+                txtBoxSqDesc.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getDesc();
+                txtBoxCat.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getDiagCmd().Substring(0, 1);
+                txtBoxMod.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getDiagCmd().Substring(1, 3);
+                cBoxFunc.SelectedItem = funcNames;
+                txtBoxPara.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getPara();
+                txtBoxExpOut.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getExpected();
+            }
+        }
+
+        private string[] getparaOrOutcome(TreeNode node, bool getPara)
+        {
+            string[] strArr = null;
+            try
+            {
+                int num = getTestMenuNum(getCatergoryName(node));
+                string[] modules = tm[num].getModuleName().Split('|');
+                int index = getModuleIdIndex(modules, getModuleName(node));
+                if (index == 99)
+                    throw new ShowErrorMessageException("Module not available in class!");
+                if (getPara)
+                {
+                    strArr = tm[num].getPara().Split('&');
+                    return strArr[index].Split(',');
+                }
+                else
+                {
+                    strArr = tm[num].getOutcome().Split('&');
+                    return strArr[index].Split(',');
+                }
+            }
+            catch (ShowErrorMessageException ex) { }
+            return strArr;
+        }
+
+        private bool verifiedParaOrOutcome(string para, bool paraOrOutcome)
+        {
+            TreeNode node = treeView1.SelectedNode;
+            string[] strArr = getparaOrOutcome(node, paraOrOutcome);
+
+            if (para.Contains('|') && strArr[cBoxFunc.SelectedIndex].Contains('|'))
+            {
+                if (para.Split('|').Length != strArr[cBoxFunc.SelectedIndex].Split('|').Length)
+                    return false;
+                else
+                    return checkParameter(para.Split('|'), strArr[cBoxFunc.SelectedIndex].Split('|')) ? true: false;
+            }
+
+            return false;
+        }
+
+        private bool checkParameter(string[] para, string[] excelPara)
+        {
+            bool result = false;
+
+            for (int i = 0; i < para.Length; i++)
+            {
+                switch(excelPara[i])
+                {
+                    case "N":
+                        //try
+                        //{
+                        //    para[i]
+                        //}
+                        break;
+                    case "C":
+                        break;
+                    case "STR":
+                        break;
+                    case "HEX8":
+                        break;
+                    case "HEX16":
+                        break;
+                    case "HEX32":
+                        break;
+                    case "ARRAY":
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return result;
         }
 
         private void displayTestCaseClass()
@@ -1142,27 +1302,16 @@ namespace XMLEditor
             }
         }
 
-        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        private void displayPara(string[] strArr)
         {
-            TreeNode node = treeView1.SelectedNode;
-            clearAllTextbox();
+            string msg = string.Empty;
 
-            if (treeView1.SelectedNode.Level == 3)
+            for (int i = 0; i < strArr.Length; i++)
             {
-                txtBoxTcDesc.Text = cat.tc[node.Index].getDesc();
-                cBoxFunc.SelectedItem = null;
+                msg += strArr[i] + "\n";
             }
-            else if (treeView1.SelectedNode.Level == 4)
-            {
-                string funcName = cat.tc[node.Parent.Index].seqNo[node.Index].getDiagCmd().Substring(4);
-                txtBoxTcDesc.Text = cat.tc[node.Parent.Index].getDesc();
-                txtBoxSqDesc.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getDesc();
-                txtBoxCat.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getDiagCmd().Substring(0, 1);
-                txtBoxMod.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getDiagCmd().Substring(1, 3);
-                cBoxFunc.SelectedItem = funcName;
-                txtBoxPara.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getPara();
-                txtBoxExpOut.Text = cat.tc[node.Parent.Index].seqNo[node.Index].getExpected();
-            }
+
+            MessageBox.Show(msg);
         }
 
         private int getNumberOfParam(string text, char[] separators)
