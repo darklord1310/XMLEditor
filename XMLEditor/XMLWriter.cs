@@ -36,11 +36,11 @@ namespace XMLEditor
 
             foreach(SqNum sequence in sequences)
             {
-                XAttribute sn = new XAttribute("sn", sequence.getSeqNo().ToString() );
-                XElement seqDesc = new XElement("Desc", sequence.getDesc().ToString() );
-                XElement diagcmd = new XElement("DiagCmd", sequence.getDiagCmd().ToString() );
-                XElement param = new XElement("Param", sequence.getPara().ToString());
-                XElement expect = new XElement("Expect", sequence.getExpected().ToString());
+                XAttribute sn = new XAttribute("sn", sequence.getSeqNo() );
+                XElement seqDesc = new XElement("Desc", sequence.getDesc() );
+                XElement diagcmd = new XElement("DiagCmd", sequence.getDiagCmd());
+                XElement param = new XElement("Param", sequence.getPara());
+                XElement expect = new XElement("Expect", sequence.getExpected());
                 
                 seqNo.Add(sn);
                 seqNo.Add(seqDesc);

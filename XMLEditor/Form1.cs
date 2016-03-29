@@ -1184,7 +1184,7 @@ namespace XMLEditor
 
         }
 
-        private void validateParam(string strFromExcel, string strFromUser)
+        private int validateParam(string strFromExcel, string strFromUser)
         {
             char[] separators = { '|' };
             List<TokenInfo> excelToken = (List<TokenInfo>)Tokenize.GetTokens(strFromExcel, separators);
@@ -1192,13 +1192,59 @@ namespace XMLEditor
 
             for(int i = 0; i < excelToken.Count; i++)
             {
-                MessageBox.Show(excelToken[i].Token);
+                if (determineTypeAndCompare(excelToken[i].Token, userToken[i].Token) == false)
+                    return i+1;
+                
             }
-
+            return -99;
         }
 
+        private bool determineTypeAndCompare(string excelToken, string userToken)
+        {
+            switch (excelToken)
+            {
+                case "N": if (Convert.ToInt64(userToken) <= 9999999999)
+                            return true;
+                          else
+                            return false;
+                case "C": if (Convert.ToInt64(userToken) <= 999999999999)
+                            return true;
+                          else
+                            return false;
+                case "HEX8": if (isAllHex(userToken) && userToken.Length == 2)
+                                return true;
+                             else
+                                return false;
+                case "HEX16": if (isAllHex(userToken) && userToken.Length == 4)
+                                return true;
+                             else
+                                return false;
+                case "HEX32": if (isAllHex(userToken) && userToken.Length == 8)
+                                return true;
+                              else
+                                return false;
+                case "ARRAY": if (isAllHex(userToken))
+                                return true;
+                              else
+                                return false;
+                default: return true;
 
+            }
+        }
+
+        private bool isAllHex(string text)
+        {
+            foreach(char c in text)
+            {
+                char temp = char.ToLower(c);
+                if (!char.IsDigit(temp) && (temp != 'a' || temp != 'b' || temp != 'c' || temp != 'd' || temp != 'e'))
+                    return false; 
+            }
+            return true;
+        }
     }
+
+
 }
 
 
