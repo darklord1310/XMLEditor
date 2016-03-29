@@ -999,6 +999,8 @@ namespace XMLEditor
                 showMsgBox(cat.getCategory() + "_" + cat.getModule() + ".xml" + " created successfully.", MessageBoxIcon.Information);
             else
                 showMsgBox("Error occured! " + cat.getCategory() + "_" + cat.getModule() + ".xml" + " is not created.", MessageBoxIcon.Error);
+
+            validateParam("00|11|22|3333|", "23");
         }
 
 
@@ -1311,7 +1313,87 @@ namespace XMLEditor
 
             MessageBox.Show(msg);
         }
+
+        private int getNumberOfParam(string text, char[] separators)
+        {
+            List<TokenInfo> token = (List<TokenInfo>)Tokenize.GetTokens(text, separators);
+            return token.Count;
+        }
+
+        private bool compareNumberOfParam(string str1, string str2)
+        {
+            char[] separators = {'|'};
+            int count1 = getNumberOfParam(str1, separators);
+            int count2 = getNumberOfParam(str2, separators);
+
+            if (count1 == count2)
+                return true;
+            else
+                return false;
+
+        }
+
+        private int validateParam(string strFromExcel, string strFromUser)
+        {
+            char[] separators = { '|' };
+            List<TokenInfo> excelToken = (List<TokenInfo>)Tokenize.GetTokens(strFromExcel, separators);
+            List<TokenInfo> userToken = (List<TokenInfo>)Tokenize.GetTokens(strFromUser, separators);
+
+            for(int i = 0; i < excelToken.Count; i++)
+            {
+                if (determineTypeAndCompare(excelToken[i].Token, userToken[i].Token) == false)
+                    return i+1;
+                
+            }
+            return -99;
+        }
+
+        private bool determineTypeAndCompare(string excelToken, string userToken)
+        {
+            switch (excelToken)
+            {
+                case "N": if (Convert.ToInt64(userToken) <= 9999999999)
+                            return true;
+                          else
+                            return false;
+                case "C": if (Convert.ToInt64(userToken) <= 999999999999)
+                            return true;
+                          else
+                            return false;
+                case "HEX8": if (isAllHex(userToken) && userToken.Length == 2)
+                                return true;
+                             else
+                                return false;
+                case "HEX16": if (isAllHex(userToken) && userToken.Length == 4)
+                                return true;
+                             else
+                                return false;
+                case "HEX32": if (isAllHex(userToken) && userToken.Length == 8)
+                                return true;
+                              else
+                                return false;
+                case "ARRAY": if (isAllHex(userToken))
+                                return true;
+                              else
+                                return false;
+                default: return true;
+
+            }
+        }
+
+        private bool isAllHex(string text)
+        {
+            foreach(char c in text)
+            {
+                char temp = char.ToLower(c);
+                if (!char.IsDigit(temp) && (temp != 'a' || temp != 'b' || temp != 'c' || temp != 'd' || temp != 'e'))
+                    return false; 
+            }
+            return true;
+        }
     }
+
+
 }
 
 
