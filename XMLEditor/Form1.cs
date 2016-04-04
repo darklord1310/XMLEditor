@@ -148,7 +148,7 @@ namespace XMLEditor
                     }
                     else
                     {
-                        showMsgBox("No module available for " + node.Text + "!", MessageBoxIcon.Warning);
+                        showMsgBox("No module available for " + node.Text + "!", MessageBoxIcon.Exclamation);
                     }
                 }
             }
@@ -164,7 +164,7 @@ namespace XMLEditor
                 string[] modules = tm[num].getModuleName().Split('|');
                 string[] moduleID = tm[num].getModuleID().Split('|');
                 int index = getModuleIdIndex(modules, getModuleName(node));
-                if (index != 99)
+                if (index != -1)
                     txtBoxMod.Text = moduleID[index];
                 else
                     throw new ShowErrorMessageException("Module not available in class!");
@@ -218,7 +218,7 @@ namespace XMLEditor
                 }
             }
 
-            return 99;
+            return -1;
         }
 
         private void clearAllTextbox()
@@ -449,7 +449,7 @@ namespace XMLEditor
             }
 
             catch (ShowErrorMessageException ex) { }
-            catch (Exception ex) { MessageBox.Show(ex.Message); }
+            catch (Exception ex) { showMsgBox(ex.Message, MessageBoxIcon.Error); }
 
             //MessageBox.Show(tm[1].getModuleName());
             //MessageBox.Show(tm[1].getFuncName());
@@ -1011,7 +1011,7 @@ namespace XMLEditor
             {
                 if (string.IsNullOrEmpty(txtBoxTcDesc.Text))
                 {
-                    MessageBox.Show("Please enter the description!");
+                    showMsgBox("Please enter the description!", MessageBoxIcon.Warning);
                     txtBoxTcDesc.Text = string.Empty;
                 }
                 else
@@ -1036,7 +1036,7 @@ namespace XMLEditor
             {
                 if (string.IsNullOrEmpty(txtBoxSqDesc.Text))
                 {
-                    MessageBox.Show("Please enter the description!");
+                    showMsgBox("Please enter the description!", MessageBoxIcon.Warning);
                     txtBoxSqDesc.Text = string.Empty;
                 }
                 else
@@ -1067,28 +1067,34 @@ namespace XMLEditor
                 else
                 {
                     strOutcome = getparaOrOutcome(node, !getPara);
-                    //do
-                    //{
-                        if (node.Level == 3)
-                            cat.tc[node.Index].seqNo[node.Nodes.Count - 1].setPara(txtBoxPara.Text);
-                        else
-                            cat.tc[node.Parent.Index].seqNo[node.Index].setPara(txtBoxPara.Text);
-                    //} while (!verifiedParaOrOutcome(txtBoxPara.Text, getPara));
 
-                    txtBoxPara.ReadOnly = true;
-                    lblPara.Text = "Parameter";
+                    if (node.Level == 3)
+                        cat.tc[node.Index].seqNo[node.Nodes.Count - 1].setPara(txtBoxPara.Text);
+                    else
+                        cat.tc[node.Parent.Index].seqNo[node.Index].setPara(txtBoxPara.Text);
 
-                    if (!strOutcome[cBoxFunc.SelectedIndex].Equals("-"))
+                    if (verifiedParaOrOutcome(txtBoxPara.Text, getPara))
                     {
-                        txtBoxExpOut.ReadOnly = false;
-                        txtBoxExpOut.Focus();
-                        lblExpOut.Text += " (Press enter to continue)";
+                        txtBoxPara.ReadOnly = true;
+                        lblPara.Text = "Parameter";
+
+                        if (!strOutcome[cBoxFunc.SelectedIndex].Equals("-"))
+                        {
+                            txtBoxExpOut.ReadOnly = false;
+                            txtBoxExpOut.Focus();
+                            lblExpOut.Text += " (Press enter to continue)";
+                        }
+                        else
+                        {
+                            cBoxFunc.Enabled = false;
+                            treeView1.Enabled = true;
+                            tvMode = -1;
+                        }
                     }
                     else
                     {
-                        cBoxFunc.Enabled = false;
-                        treeView1.Enabled = true;
-                        tvMode = -1;
+                        txtBoxPara.Text = txtBoxPara.Text.Replace("\r\n", "").Replace("\n", "").Replace("\r", "");
+                        txtBoxPara.SelectionStart = txtBoxPara.Text.Length;
                     }
                 }
             }
@@ -1101,7 +1107,7 @@ namespace XMLEditor
             {
                 if (string.IsNullOrEmpty(txtBoxExpOut.Text))
                 {
-                    MessageBox.Show("Please enter the expected outcome!");
+                    showMsgBox("Please enter the expected outcome!", MessageBoxIcon.Warning);
                     txtBoxSqDesc.Text = string.Empty;
                 }
                 else
@@ -1110,6 +1116,7 @@ namespace XMLEditor
                         cat.tc[node.Index].seqNo[node.Nodes.Count - 1].setExpected(txtBoxExpOut.Text);
                     else
                         cat.tc[node.Parent.Index].seqNo[node.Index].setExpected(txtBoxExpOut.Text);
+
                     txtBoxExpOut.ReadOnly = true;
                     lblExpOut.Text = "Expected Outcome";
                     txtBoxExpOut.ReadOnly = true;
@@ -1127,7 +1134,7 @@ namespace XMLEditor
             string[] strPara = null, strOutcome = null;
             txtBoxPara.ReadOnly = true;
             txtBoxExpOut.ReadOnly = true;
-            if(cBoxFunc.SelectedItem != null && !string.Equals(comboBoxSelectedItem, cBoxFunc.SelectedItem.ToString()))
+            if(cBoxFunc.SelectedItem != null)
             {
                 if (node.Level == 3)
                     cat.tc[node.Index].seqNo[node.Nodes.Count - 1].setDiagCmd(txtBoxCat.Text + txtBoxMod.Text + cBoxFunc.SelectedItem.ToString());
@@ -1141,10 +1148,10 @@ namespace XMLEditor
                 {
                     if (!strPara[cBoxFunc.SelectedIndex].Equals("-"))
                     {
+                        txtBoxPara.Text = string.Empty;
                         txtBoxPara.ReadOnly = false;
                         txtBoxPara.Focus();
                         txtBoxExpOut.ReadOnly = true;
-                        txtBoxPara.Text = string.Empty;
                         txtBoxExpOut.Text = string.Empty;
                         lblPara.Text = "Parameter";
                         lblExpOut.Text = "Expected Outcome";
@@ -1207,7 +1214,7 @@ namespace XMLEditor
                 int num = getTestMenuNum(getCatergoryName(node));
                 string[] modules = tm[num].getModuleName().Split('|');
                 int index = getModuleIdIndex(modules, getModuleName(node));
-                if (index == 99)
+                if (index == -1)
                     throw new ShowErrorMessageException("Module not available in class!");
                 if (getPara)
                 {
@@ -1229,49 +1236,48 @@ namespace XMLEditor
             TreeNode node = treeView1.SelectedNode;
             string[] strArr = getparaOrOutcome(node, paraOrOutcome);
 
-            if (para.Contains('|') && strArr[cBoxFunc.SelectedIndex].Contains('|'))
+            if(para[0] == '|' || para[para.Length - 1] == '|')
             {
-                if (para.Split('|').Length != strArr[cBoxFunc.SelectedIndex].Split('|').Length)
-                    return false;
-                else
-                    return checkParameter(para.Split('|'), strArr[cBoxFunc.SelectedIndex].Split('|')) ? true: false;
+                showMsgBox("Error on parameter format!", MessageBoxIcon.Error);
+                return false;
             }
 
-            return false;
-        }
-
-        private bool checkParameter(string[] para, string[] excelPara)
-        {
-            bool result = false;
-
-            for (int i = 0; i < para.Length; i++)
+            if (strArr[cBoxFunc.SelectedIndex].Contains('|'))
             {
-                switch(excelPara[i])
+                if (para.Contains('|'))
                 {
-                    case "N":
-                        //try
-                        //{
-                        //    para[i]
-                        //}
-                        break;
-                    case "C":
-                        break;
-                    case "STR":
-                        break;
-                    case "HEX8":
-                        break;
-                    case "HEX16":
-                        break;
-                    case "HEX32":
-                        break;
-                    case "ARRAY":
-                        break;
-                    default:
-                        break;
+                    if (para.Split('|').Length != strArr[cBoxFunc.SelectedIndex].Split('|').Length)
+                    {
+                        showMsgBox("Error on number of parameter! \n" + strArr[cBoxFunc.SelectedIndex], MessageBoxIcon.Error);
+                        return false;
+                    }
+                    else
+                    {
+                        return validation(strArr[cBoxFunc.SelectedIndex], para);
+                    }
+                }
+                else
+                {
+                    showMsgBox("Error on number of parameter! \n" + strArr[cBoxFunc.SelectedIndex], MessageBoxIcon.Error);
+                    return false;
                 }
             }
+            else
+            {
+                return validation(strArr[cBoxFunc.SelectedIndex], para);
+            }
+        }
 
-            return result;
+        private bool validation(string excelPara, string userPara)
+        {
+            int index = validateParam(excelPara, para);
+
+            if (index != -1)
+            {
+                showMsgBox("Error on parameter number " + index.ToString() + "!", MessageBoxIcon.Error);
+                return false;
+            }
+            return true;
         }
 
         private void displayTestCaseClass()
@@ -1314,68 +1320,78 @@ namespace XMLEditor
             MessageBox.Show(msg);
         }
 
-        private int getNumberOfParam(string text, char[] separators)
-        {
-            List<TokenInfo> token = (List<TokenInfo>)Tokenize.GetTokens(text, separators);
-            return token.Count;
-        }
-
-        private bool compareNumberOfParam(string str1, string str2)
-        {
-            char[] separators = {'|'};
-            int count1 = getNumberOfParam(str1, separators);
-            int count2 = getNumberOfParam(str2, separators);
-
-            if (count1 == count2)
-                return true;
-            else
-                return false;
-
-        }
-
         private int validateParam(string strFromExcel, string strFromUser)
         {
             char[] separators = { '|' };
-            List<TokenInfo> excelToken = (List<TokenInfo>)Tokenize.GetTokens(strFromExcel, separators);
-            List<TokenInfo> userToken = (List<TokenInfo>)Tokenize.GetTokens(strFromUser, separators);
 
-            for(int i = 0; i < excelToken.Count; i++)
+            if (strFromExcel.Contains('|') && strFromUser.Contains('|'))
             {
-                if (determineTypeAndCompare(excelToken[i].Token, userToken[i].Token) == false)
-                    return i+1;
-                
+                List<TokenInfo> excelToken = (List<TokenInfo>)Tokenize.GetTokens(strFromExcel, separators);
+                List<TokenInfo> userToken = (List<TokenInfo>)Tokenize.GetTokens(strFromUser, separators);
+
+
+                for (int i = 0; i < excelToken.Count; i++)
+                {
+                    if (determineTypeAndCompare(excelToken[i].Token, userToken[i].Token) == false)
+                        return i + 1;
+
+                }
             }
-            return -99;
+            else
+            {
+                if (determineTypeAndCompare(strFromExcel, strFromUser) == false)
+                    return 0;
+            }
+
+            return -1;
         }
 
         private bool determineTypeAndCompare(string excelToken, string userToken)
         {
             switch (excelToken)
             {
-                case "N": if (Convert.ToInt64(userToken) <= 9999999999)
-                            return true;
-                          else
-                            return false;
-                case "C": if (Convert.ToInt64(userToken) <= 999999999999)
-                            return true;
-                          else
-                            return false;
-                case "HEX8": if (isAllHex(userToken) && userToken.Length == 2)
-                                return true;
-                             else
-                                return false;
-                case "HEX16": if (isAllHex(userToken) && userToken.Length == 4)
-                                return true;
-                             else
-                                return false;
-                case "HEX32": if (isAllHex(userToken) && userToken.Length == 8)
-                                return true;
-                              else
-                                return false;
-                case "ARRAY": if (isAllHex(userToken))
-                                return true;
-                              else
-                                return false;
+                case " N ":
+                case "N ":
+                case " N":
+                    if (Convert.ToInt64(userToken) <= 9999999999)
+                        return true;
+                    else
+                        return false;
+                case " C ":
+                case "C ":
+                case " C":
+                    if (Convert.ToInt64(userToken) <= 999999999999)
+                        return true;
+                    else
+                        return false;
+                case " HEX8 ":
+                case "HEX8 ":
+                case " HEX8": 
+                    if (isAllHex(userToken) && userToken.Length == 2)
+                        return true;
+                    else
+                        return false;
+                case " HEX16 ":
+                case "HEX16 ":
+                case " HEX16":
+                    if (isAllHex(userToken) && userToken.Length == 4)
+                        return true;
+                    else
+                        return false;
+                case " HEX32 ":
+                case "HEX32 ":
+                case " HEX32":
+                    if (isAllHex(userToken) && userToken.Length == 8)
+                        return true;
+                    else
+                        return false;
+               case " ARRAY ":
+               case "ARRAY ":
+               case " ARRAY": 
+                    if (isAllHex(userToken))
+                        return true;
+                    else
+                        return false;
                 default: return true;
 
             }
@@ -1385,9 +1401,15 @@ namespace XMLEditor
         {
             foreach(char c in text)
             {
-                char temp = char.ToLower(c);
-                if (!char.IsDigit(temp) && (temp != 'a' || temp != 'b' || temp != 'c' || temp != 'd' || temp != 'e'))
-                    return false; 
+                if (c != '\r')
+                {
+                    char temp = char.ToLower(c);
+                    if (!char.IsDigit(temp))
+                    {
+                        if(temp < 97 || temp > 102)
+                            return false;
+                    }
+                }
             }
             return true;
         }
